@@ -55,3 +55,6 @@ outputs/*
 # Temporary files.
 *.tmp
 *.temp
+
+# Ignore automatic PyTorch Lightning logs created during model execution.
+lightning_logs/
