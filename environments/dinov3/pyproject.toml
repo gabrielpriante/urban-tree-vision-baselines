@@ -1,0 +1,14 @@
+[project] # Begin the standalone metadata section for the DINOv3 inference environment.
+name = "urban-tree-vision-dinov3-env" # Give this local environment a unique name that will not conflict with Meta's upstream dinov3 package.
+version = "0.1.0" # Set the initial version of the DINOv3 inference environment.
+requires-python = ">=3.12,<3.13" # Require Python 3.12 so the DINOv3 experiment remains reproducible across machines.
+dependencies = [
+    "dinov3",
+    "pillow>=12.3.0",
+] # Begin with no dependencies until each DINOv3 inference dependency is added deliberately.
+
+[tool.uv] # Begin configuration specific to the uv environment manager.
+package = false # Treat this directory as an analysis environment rather than an installable project package.
+
+[tool.uv.sources]
+dinov3 = { git = "https://github.com/facebookresearch/dinov3.git" }
