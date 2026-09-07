@@ -1,0 +1,26 @@
+# Automatically identify text files for consistent Git line-ending handling.
+* text=auto
+
+# Store Python source files with Unix-style LF line endings for cross-platform reproducibility.
+*.py text eol=lf
+
+# Store TOML configuration files with Unix-style LF line endings for cross-platform reproducibility.
+*.toml text eol=lf
+
+# Store YAML configuration files with Unix-style LF line endings for cross-platform reproducibility.
+*.yaml text eol=lf
+
+# Store Markdown documentation with Unix-style LF line endings for consistent repository rendering.
+*.md text eol=lf
+
+# Store CSV research metadata with Unix-style LF line endings for cross-platform data processing.
+*.csv text eol=lf
+
+# Store uv lockfiles with Unix-style LF line endings for reproducible dependency metadata.
+uv.lock text eol=lf
+
+# Store the Python version pin with Unix-style LF line endings.
+.python-version text eol=lf
+
+# Preserve Windows PowerShell scripts with Windows-style CRLF line endings if PowerShell scripts are added later.
+*.ps1 text eol=crlf

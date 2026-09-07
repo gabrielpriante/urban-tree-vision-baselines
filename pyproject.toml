@@ -1,0 +1,12 @@
+[project] # Begin the standard metadata section for this Python project.
+name = "urban-tree-vision-baselines" # Define the public name of the research project.
+version = "0.1.0" # Set the initial development version of the analysis pipeline.
+description = "Reproducible evaluation of pretrained computer vision models for individual tree detection in standardized urban drone imagery." # Describe the scientific purpose of the repository.
+readme = "README.md" # Use the repository README as the long-form project description.
+requires-python = ">=3.12,<3.13" # Require Python 3.12 so the analysis does not silently move between Python minor versions.
+dependencies = [ # Begin the list of runtime dependencies required by this research project.
+    "deepforest==2.1.0", # Pin DeepForest to version 2.1.0 so baseline inference uses a reproducible model software release.
+] # End the list of explicitly controlled runtime dependencies.
+
+[tool.uv] # Begin configuration specific to the uv environment manager.
+package = false # Treat this repository as a research analysis project rather than a distributable Python package for now.
