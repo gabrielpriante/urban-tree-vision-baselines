@@ -38,7 +38,7 @@ model = build_sam2(MODEL_CONFIG, CHECKPOINT_PATH, device="cuda", apply_postproce
 mask_generator = SAM2AutomaticMaskGenerator(  # Construct the B1 automatic mask generator with explicitly frozen untuned parameters.
     model=model,  # Supply the pinned SAM 2.1 Base+ model.
     points_per_side=32,  # Use Meta's default 32 by 32 point-prompt grid.
-    points_per_batch=64,  # Use Meta's default inference batch of 64 prompt points.
+    points_per_batch=4,  # Use a hardware-adjusted batch of 4 prompt points to fit the 8 GB GPU without changing the automatic prompt grid.
     pred_iou_thresh=0.8,  # Use Meta's default predicted-IoU quality threshold.
     stability_score_thresh=0.95,  # Use Meta's default mask-stability threshold.
     stability_score_offset=1.0,  # Use Meta's default stability-score cutoff offset.
@@ -95,7 +95,7 @@ payload = {  # Create one complete reproducibility record for the B1 image infer
     "gpu": torch.cuda.get_device_name(0),  # Record the exact GPU used for B1 inference.
     "generator_parameters": {  # Record every frozen automatic-mask parameter that can affect the generated prediction set.
         "points_per_side": 32,  # Record the fixed prompt-grid density.
-        "points_per_batch": 64,  # Record the fixed prompt-processing batch size.
+        "points_per_batch": 4,  # Record the fixed prompt-processing batch size.
         "pred_iou_thresh": 0.8,  # Record the fixed predicted-IoU filter.
         "stability_score_thresh": 0.95,  # Record the fixed mask-stability filter.
         "stability_score_offset": 1.0,  # Record the fixed stability-score offset.
