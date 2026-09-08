@@ -96,3 +96,54 @@ Each inference run should record enough information to reproduce the prediction 
 - Hardware device
 - Source-code version
 - Prediction output location
+
+## Phase A: TreeCountSegHeight RGB baseline
+
+TreeCountSegHeight was evaluated using the project's official pretrained RGB model and official Docker environment.
+
+### Deployment condition
+
+- Source imagery: standardized 8192 x 6144 DJI RGB JPEGs.
+- Nominal source GSD: 1.67 cm/pixel.
+- Target GSD: 20.00 cm/pixel.
+- Resampling: Lanczos.
+- Derived input size: 684 x 513 pixels.
+- Input type: three-band uint8 RGB TIFF.
+- No CRS or geospatial metadata was fabricated.
+- Pretrained model: RGB attention U-Net segmentation and density-counting model.
+- Segmentation threshold: 0.5.
+- Other inference parameters retained from the authors' packaged configuration.
+- No model fine-tuning, threshold optimization, or ground-truth-informed parameter adjustment was performed.
+
+### Frozen density-count outputs
+
+| Image | Condition | Density-based count |
+| --- | --- | ---: |
+| PT_R1 | Before | 3.728563 |
+| PT_R1 | After | 3.219690 |
+| PT_02 | Before | 0.787543 |
+| PT_02 | After | 1.188348 |
+
+### Interpretation
+
+The pretrained RGB TreeCountSegHeight baseline transferred poorly to the study imagery. Segmentation outputs were extremely sparse and omitted substantial visually apparent tree canopy in both scenes. The low density-based count estimates were consistent with the sparse spatial predictions.
+
+Before-and-after differences are retained as model outputs but are not interpreted as tree gain or loss. The paired drone images differ in viewing orientation, and the weak baseline transfer makes causal interpretation inappropriate.
+
+No additional tuning was performed after inspecting these outputs.
+
+### Reproducibility notes
+
+The official Docker image was pinned by digest:
+
+`sha256:fab4a8e16d7bc085440724c9fa522c957dc04299c625fcab7617b87c1c154e13`
+
+The RGB model checkpoint used was:
+
+`trees_20210620-0202_Adam_e4_redgreenblue_256_84_frames_weightmapTversky_MSE100_5weight_attUNet.h5`
+
+Checkpoint SHA-256:
+
+`abce53345b8159aeda49dce7db32a0806ee90970593e7d2a1fe88d1f133ac843`
+
+The four derived 20 cm TIFF inputs were also hashed before inference.
