@@ -1,0 +1,35 @@
+general: # Define the standardized input and output behavior for the TreeCountSegHeight RGB baseline.
+  input_image_dir: '/app/images/' # Use the container's documented mounted input-image directory.
+  input_image_type: '.tif' # Restrict inference to the TIFF format expected by the packaged deployment workflow.
+  input_image_pref: '' # Process every TIFF in the mounted input directory without filename filtering.
+  channels: # Define the zero-based raster band indices consumed by the pretrained models.
+    red: 0 # Use TIFF band 1 as the red channel after Rasterio converts it to zero-based indexing.
+    green: 1 # Use TIFF band 2 as the green channel after Rasterio converts it to zero-based indexing.
+    blue: 2 # Use TIFF band 3 as the blue channel after Rasterio converts it to zero-based indexing.
+    infrared: 'None' # Disable infrared using the literal string expected by the packaged inference code.
+  output_dir: '/app/predictions/' # Use the container's documented mounted prediction directory.
+  output_suffix_seg: '_seg' # Preserve the authors' packaged segmentation-output suffix.
+  output_suffix_density: '*density' # Preserve the authors' packaged density-output suffix exactly as distributed.
+  output_image_type: '.tif' # Save prediction products as TIFF rasters.
+  output_prefix: 'pred*' # Preserve the authors' packaged prediction-prefix setting.
+  overwrite_analysed_files: False # Do not silently overwrite an existing prediction.
+  output_dtype_seg: 'uint8' # Preserve the packaged segmentation output datatype.
+  output_dtype_density: 'float32' # Preserve the packaged density output datatype.
+
+predict: # Define the frozen pretrained-model inference configuration.
+  model_save_path: '/app/saved_models/' # Use the persistent mounted directory for downloaded pretrained weights.
+  models_in_use: # Select only pretrained models compatible with our RGB imagery.
+    - 'rgb' # Use only the official three-channel RGB pretrained model.
+  fillmiss: 0 # Preserve the packaged default missing-prediction behavior.
+  segcountpred: 1 # Enable joint segmentation and density-count prediction.
+  normalize: 1 # Preserve the authors' per-patch channel normalization behavior.
+  multires: 0 # Use the packaged single-resolution model architecture.
+  saveresult: 1 # Save inference results to disk.
+  input_size: 256 # Preserve the packaged 256-pixel model input size.
+  inputBN: False # Preserve the packaged input batch-normalization setting.
+  threshold: 0.5 # Preserve the packaged segmentation threshold without ground-truth tuning.
+  BATCH_SIZE: 112 # Preserve the authors' packaged batch size unless hardware memory forces a change.
+  WIDTH: 256 # Preserve the packaged prediction-window width.
+  HEIGHT: 256 # Preserve the packaged prediction-window height.
+  STRIDE: 64 # Preserve the packaged overlapping prediction stride.
+  workers: 30 # Preserve the packaged prediction-worker setting for the compatibility run.
