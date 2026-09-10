@@ -1,0 +1,10 @@
+tree_id,condition,image_stem,image_filename,native_width,native_height,x,y,registration_method
+3,before,PT_R1,PT_R1.JPG,8192,6144,4438,3981,manual_field_confirmed_registration
+4,before,PT_R1,PT_R1.JPG,8192,6144,4594,3579,manual_field_confirmed_registration
+5,before,PT_R1,PT_R1.JPG,8192,6144,4739,3270,manual_field_confirmed_registration
+6,before,PT_R1,PT_R1.JPG,8192,6144,4256,2891,manual_field_confirmed_registration
+7,before,PT_R1,PT_R1.JPG,8192,6144,4117,2707,manual_field_confirmed_registration
+8,before,PT_R1,PT_R1.JPG,8192,6144,3867,2520,manual_field_confirmed_registration
+9,before,PT_R1,PT_R1.JPG,8192,6144,3939,2985,manual_field_confirmed_registration
+10,before,PT_R1,PT_R1.JPG,8192,6144,4329,3524,manual_field_confirmed_registration
+11,before,PT_R1,PT_R1.JPG,8192,6144,4009,3406,manual_field_confirmed_registration
