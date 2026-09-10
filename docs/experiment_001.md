@@ -148,6 +148,145 @@ Checkpoint SHA-256:
 
 The four derived 20 cm TIFF inputs were also hashed before inference.
 
+## Phase B: SAM2 spatial-guidance experiments
+
+Phase B evaluates how a general-purpose segmentation model behaves under progressively stronger forms of spatial guidance.
+
+The sequence is:
+
+1. B1: no task-specific spatial guidance.
+2. B2: machine-generated DeepForest bounding-box guidance.
+3. B3: field-informed positive-point guidance.
+
+All Phase B experiments use the same pretrained SAM2.1 Hiera Base+ model without local fine-tuning.
+
+The SAM2 checkpoint used throughout Phase B is:
+
+`models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`
+
+Checkpoint SHA-256:
+
+`a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`
+
+The official Meta SAM2 source was pinned to commit:
+
+`2b90b9f5ceec907a1c18123530e92e794ad901a4`
+
+Inference used CUDA with bfloat16 precision on an NVIDIA GeForce RTX 5070 Laptop GPU.
+
+## Phase B1: Automatic SAM2 masks
+
+Phase B1 evaluates SAM2 without tree-specific prompts.
+
+The objective is to establish how the general segmentation model partitions the standardized aerial scenes when given no information about which objects should be treated as trees.
+
+### Automatic-mask protocol
+
+- Model: SAM2.1 Hiera Base+.
+- Source imagery: native 8192 x 6144 standardized RGB JPEGs.
+- Prompt generation: automatic point grid.
+- Points per side: 32.
+- Points per batch: 4.
+- Predicted IoU threshold: 0.80.
+- Stability-score threshold: 0.95.
+- Crop layers: none.
+- Mask representation: RLE.
+- Additional model postprocessing: none.
+- Inference precision: CUDA bfloat16.
+- No tree-specific prompts were supplied.
+- No local fine-tuning was performed.
+- No manual filtering or ground-truth-informed threshold adjustment was performed.
+
+The point batch size was reduced to four for GPU-memory compatibility before any successful automatic-mask result was inspected. This hardware adjustment did not alter the spatial prompt grid or mask-quality thresholds.
+
+### Frozen automatic-mask outputs
+
+| Image | Condition | SAM2 masks | Runtime (s) | Peak GPU memory (MB) |
+| --- | --- | ---: | ---: | ---: |
+| PT_R1 | Before | 91 | 12.36 | 4533 |
+| PT_R1 | After | 96 | 23.61 | 4533 |
+| PT_02 | Before | 93 | 17.76 | 4889 |
+| PT_02 | After | 93 | 18.48 | 4701 |
+
+The reported mask counts are generic SAM2 scene-segmentation outputs. They are not tree counts and must not be interpreted as numbers of individual crowns.
+
+### B1 interpretation
+
+Without task-specific guidance, SAM2 generated high-confidence masks across many types of visible scene structure.
+
+The automatic outputs included visually coherent vegetation and tree-canopy regions, but they also segmented substantial non-tree content such as built surfaces and other scene objects.
+
+B1 therefore demonstrates that generic SAM2 segmentation can identify meaningful spatial structure in high-resolution nadir RGB imagery, but automatic mask generation alone does not provide a tree-specific inventory or individual-crown delineation system.
+
+No B1 masks or model settings were manually corrected after inspection.
+
+## Phase B2: DeepForest-guided SAM2
+
+Phase B2 evaluates whether tree-detector bounding boxes can provide useful machine-generated spatial guidance to SAM2.
+
+DeepForest predictions were generated and frozen before SAM2 segmentation. Each frozen DeepForest bounding box was then used as one SAM2 box prompt.
+
+No DeepForest box was manually removed, corrected, or replaced based on field observations or SAM2 output.
+
+### DeepForest prompt source
+
+The DeepForest deployment used imagery resampled to an effective GSD of 7.89 cm/pixel.
+
+The derived DeepForest images were 1734 x 1300 pixels, while SAM2 operated on the corresponding native 8192 x 6144 RGB images.
+
+DeepForest bounding boxes were mapped from the derived-image coordinate space back to native-image coordinates using the exact horizontal and vertical scale ratios between the two image dimensions.
+
+### Frozen DeepForest box counts
+
+| Image | Condition | DeepForest box prompts |
+| --- | --- | ---: |
+| PT_R1 | Before | 293 |
+| PT_R1 | After | 302 |
+| PT_02 | Before | 386 |
+| PT_02 | After | 412 |
+
+These values represent frozen DeepForest detections supplied as SAM2 prompts. They are not assumed to represent unique physical trees because DeepForest predictions may contain false positives, duplicate detections, or multiple detections associated with connected vegetation.
+
+### SAM2 box-prompt protocol
+
+- Model: SAM2.1 Hiera Base+.
+- Source imagery: native 8192 x 6144 standardized RGB JPEGs.
+- Prompt type: one frozen DeepForest bounding box per SAM2 prediction.
+- Multimask output: false.
+- One SAM2 mask retained per DeepForest box prompt.
+- Manual mask selection: none.
+- Additional SAM2 postprocessing: none.
+- Local fine-tuning: none.
+- Ground-truth-informed prompt filtering: none.
+
+### Frozen DeepForest-guided outputs
+
+| Image | Condition | Box prompts | SAM2 masks | Runtime (s) |
+| --- | --- | ---: | ---: | ---: |
+| PT_R1 | Before | 293 | 293 | 50.53 |
+| PT_R1 | After | 302 | 302 | 52.46 |
+| PT_02 | Before | 386 | 386 | 67.05 |
+| PT_02 | After | 412 | 412 | 72.32 |
+
+The one-to-one relationship between DeepForest box prompts and SAM2 masks is imposed by the inference protocol. These mask counts therefore must not be interpreted as independent SAM2 tree detections.
+
+### B2 interpretation
+
+DeepForest guidance substantially narrowed SAM2 segmentation toward regions that the tree detector had identified as candidate crowns.
+
+Compared with B1 automatic segmentation, the B2 outputs contained substantially less unrelated scene segmentation because SAM2 was no longer being asked to segment arbitrary visible objects.
+
+However, B2 inherits the behavior of the upstream detector. False-positive boxes, duplicate detections, and poorly localized DeepForest predictions can each generate corresponding SAM2 masks.
+
+The experiment therefore separates two tasks that are otherwise easy to conflate:
+
+1. DeepForest determines where candidate trees may be located.
+2. SAM2 determines the segmentation geometry produced within each supplied detector prompt.
+
+Improved segmentation geometry does not independently validate the underlying detector prediction as a unique physical tree.
+
+No DeepForest prompts or resulting SAM2 masks were manually altered after output inspection.
+
 ## Phase B3: Field-confirmed point-guided SAM2
 
 Phase B3 evaluates whether field-confirmed tree identity and approximate image location can provide useful spatial guidance to a general segmentation model.
@@ -279,3 +418,17 @@ Registration confidence and SAM2 mask quality describe different uncertainties. 
 No PT_02 points, confidence labels, SAM2 thresholds, masks, or model settings were modified after inspecting the resulting segmentations.
 
 BEFORE and AFTER PT_02 masks are not interpreted as tree-level temporal change. The A01 through A22 identifiers represent independently registered slots rather than confirmed longitudinal physical-tree identities, and differences in mask area or geometry may reflect viewing conditions, manual registration uncertainty, canopy connectivity, or model behavior.
+
+## Phase B conclusion
+
+Phase B establishes a progressive spatial-guidance comparison for pretrained SAM2 on standardized urban drone imagery.
+
+B1 showed that unguided automatic mask generation can segment visually coherent scene structure but does not distinguish tree crowns from other visible objects.
+
+B2 showed that machine-generated DeepForest boxes substantially focus SAM2 on candidate tree locations, but the resulting segmentation workflow inherits detector false positives, duplicates, and localization errors.
+
+B3 showed that field-informed point prompts can provide much stronger task localization when the target trees can be registered confidently. PT_R1 produced several locally plausible crown masks from minimal point guidance, while the dense PT_02 alleyway demonstrated that single points remain insufficient for reliably separating individual crowns within connected vegetation.
+
+Together, the three conditions demonstrate that stronger spatial information progressively reduces the localization problem presented to a general segmentation model, but spatial guidance alone does not solve individual-tree delineation in complex contiguous canopy.
+
+Phase B is complete under the frozen protocols described above. No additional prompt variants, confidence-based filtering, threshold optimization, manual mask correction, or ground-truth-informed tuning are included in this phase.
