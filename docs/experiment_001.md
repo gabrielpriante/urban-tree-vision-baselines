@@ -210,3 +210,72 @@ These results indicate that supplying field-confirmed object identity and approx
 No prompts, thresholds, masks, or model settings were modified after inspecting these outputs.
 
 Differences between BEFORE and AFTER mask geometry or area are not interpreted as pruning effects, biological change, canopy gain, or canopy loss. The standardized images differ in viewing orientation, and Phase B3 currently evaluates prompt-guided segmentation behavior rather than temporal change.
+
+### PT_02 alleyway extension
+
+The same single-positive-point B3 protocol was extended to PT_02 as a dense-canopy stress test.
+
+Field work established a count of 22 trees within the alleyway study area, but precise tree-level GPS coordinates were unavailable. The 22 presumed tree locations were therefore manually registered to the standardized aerial imagery using neutral identifiers A01 through A22.
+
+Unlike PT_R1, the PT_02 identifiers do not assert confirmed physical tree identity. They represent field-count-constrained registration slots placed using the best available field-informed interpretation of the aerial imagery.
+
+The BEFORE and AFTER images were registered independently. Registration confidence was recorded separately for every PT_02 point as high, medium, or low. These confidence labels describe uncertainty in the manual field-to-image registration and were not supplied to SAM2 as model inputs.
+
+### PT_02 frozen registration inputs
+
+| Condition | High | Medium | Low | Field-point CSV SHA-256 |
+| --- | ---: | ---: | ---: | --- |
+| Before | 2 | 4 | 16 | `43bc6786e2c558dcd5044f8f140f730817e68b445d1a48ed242f18d2bafb20ed` |
+| After | 5 | 6 | 11 | `f77cc5998ca4e0d6a6eff03c3174cb3dd3ca3bddf8ddd9a7166cee2cec6f64b6` |
+
+### PT_02 frozen SAM2 outputs
+
+| Condition | Point prompts | Masks | Runtime (s) | Peak GPU memory (MB) | Output SHA-256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Before | 22 | 22 | 4.65 | 709.73 | `f1aaec9771179d46ecf6ecc1aaa8db69775680eab2826ec5344801cf390b8fdf` |
+| After | 22 | 22 | 4.76 | 709.73 | `c16a21b65bc7d0c2ff1dc257c625be7f8cc97794a54dfea301c69270e32eb45b` |
+
+The one-to-one relationship between point prompts and masks is imposed by the inference protocol and must not be interpreted as successful detection of 22 individual trees.
+
+### PT_02 tree-level output metadata
+
+| Registration | Before predicted IoU | Before area (pixels) | After predicted IoU | After area (pixels) |
+| --- | ---: | ---: | ---: | ---: |
+| A01 | 0.8984 | 175956 | 0.8945 | 154429 |
+| A02 | 0.8125 | 20781 | 0.8359 | 44601 |
+| A03 | 0.8789 | 162978 | 0.8945 | 146147 |
+| A04 | 0.8320 | 111554 | 0.8438 | 114867 |
+| A05 | 0.8164 | 110891 | 0.8359 | 114625 |
+| A06 | 0.8359 | 119186 | 0.8359 | 114109 |
+| A07 | 0.2432 | 270846 | 0.8398 | 115926 |
+| A08 | 0.3887 | 425688 | 0.5625 | 153102 |
+| A09 | 0.4121 | 1148681 | 0.8086 | 169133 |
+| A10 | 0.3906 | 1372468 | 0.3945 | 192580 |
+| A11 | 0.3789 | 961060 | 0.8711 | 135547 |
+| A12 | 0.3730 | 921138 | 0.8750 | 133622 |
+| A13 | 0.4590 | 949326 | 0.8789 | 136551 |
+| A14 | 0.9023 | 488398 | 0.8438 | 143407 |
+| A15 | 0.8945 | 472089 | 0.9180 | 389236 |
+| A16 | 0.9023 | 441998 | 0.9180 | 390848 |
+| A17 | 0.9023 | 451541 | 0.8984 | 380344 |
+| A18 | 0.9141 | 466830 | 0.9336 | 386559 |
+| A19 | 0.9141 | 438840 | 0.9102 | 386825 |
+| A20 | 0.9297 | 442814 | 0.9141 | 371453 |
+| A21 | 0.9258 | 442344 | 0.9180 | 373552 |
+| A22 | 0.8867 | 452889 | 0.8633 | 32253 |
+
+As with PT_R1, the reported predicted IoU values are SAM2 internal mask-quality estimates rather than measured IoU against manually delineated crown ground truth.
+
+### PT_02 interpretation
+
+The PT_02 results demonstrate a substantially more difficult segmentation setting than PT_R1. Visual inspection showed that single positive points frequently produced large masks spanning connected vegetation rather than cleanly separating presumed individual crowns.
+
+This behavior was particularly apparent within the dense alleyway vegetation corridor. Some spatially isolated registrations produced more locally constrained masks, while many registrations within contiguous canopy produced shared or merged vegetation regions.
+
+The PT_02 results therefore reinforce an important limitation of minimal point guidance: providing approximate object location can constrain segmentation to the relevant part of the scene, but it does not by itself supply the boundary information required to separate individual crowns where neighboring vegetation is visually continuous.
+
+Registration confidence and SAM2 mask quality describe different uncertainties. Registration confidence records uncertainty in placing the field-informed point on the aerial image. SAM2 predicted IoU records the model's internal estimate of its resulting mask quality. Neither quantity independently establishes individual-tree segmentation accuracy.
+
+No PT_02 points, confidence labels, SAM2 thresholds, masks, or model settings were modified after inspecting the resulting segmentations.
+
+BEFORE and AFTER PT_02 masks are not interpreted as tree-level temporal change. The A01 through A22 identifiers represent independently registered slots rather than confirmed longitudinal physical-tree identities, and differences in mask area or geometry may reflect viewing conditions, manual registration uncertainty, canopy connectivity, or model behavior.
