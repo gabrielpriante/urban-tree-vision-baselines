@@ -8,7 +8,7 @@
 body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; } /* Give the page a simple readable layout. */
 h1 { margin-bottom: 8px; } /* Keep the title visually close to the explanatory text. */
 .note { max-width: 950px; line-height: 1.5; } /* Keep the methodological note readable on wide screens. */
-.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the scene, image, zoom, registration, and export controls in a compact row. */
+.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the scene, image, confidence, zoom, registration, and export controls in a compact row. */
 .status { font-weight: bold; margin: 12px 0; } /* Make the current registration instruction easy to see. */
 .viewer { width: 100%; height: 72vh; overflow: auto; background: #222; border: 1px solid #999; } /* Create a scrollable workspace for the high-resolution aerial image. */
 canvas { display: block; cursor: crosshair; } /* Display the aerial image as a clickable canvas with a crosshair pointer. */
@@ -16,160 +16,376 @@ input, select, button { font-size: 14px; padding: 6px 10px; } /* Keep all browse
 </style> <!-- Finish the page styling rules. -->
 </head> <!-- Finish the page metadata section. -->
 <body> <!-- Begin the visible page content. -->
+
 <h1>Field Point Registration</h1> <!-- Display the generalized utility name. -->
+
 <p class="note">Register field-informed tree locations onto standardized aerial imagery using one interior crown point per tree.</p> <!-- State the generalized purpose of the B3 registration utility. -->
+
 <p class="note">Registered points must be frozen before SAM2 inference and must not be moved based on later SAM2 output.</p> <!-- Preserve the anti-tuning rule directly in the interface. -->
+
 <div class="controls"> <!-- Begin the scene and registration controls. -->
+
 <label>Scene <select id="sceneInput"><option value="PT_R1">PT_R1</option><option value="PT_02">PT_02</option></select></label> <!-- Let the user select the study scene before registering any image points. -->
+
 <label>Condition <select id="conditionInput"><option value="before">BEFORE</option><option value="after">AFTER</option></select></label> <!-- Record whether the selected standardized image belongs to the BEFORE or AFTER condition. -->
+
+<label id="confidenceLabel">Confidence <select id="confidenceInput"><option value="">CHOOSE</option><option value="high">HIGH</option><option value="medium">MEDIUM</option><option value="low">LOW</option></select></label> <!-- Require an explicit spatial-confidence judgment for every PT_02 point. -->
+
 <label>Image <input id="imageInput" type="file" accept="image/*"></label> <!-- Let the user choose the standardized image from the local computer. -->
+
 <label>Zoom <input id="zoomInput" type="range" min="10" max="100" value="25" step="5"></label> <!-- Let the user change only the displayed image size while preserving native pixel coordinates. -->
+
 <span id="zoomValue">25%</span> <!-- Display the current zoom percentage beside the slider. -->
+
 <button id="undoButton" type="button">Undo last point</button> <!-- Let the user remove the most recently registered tree point. -->
+
 <button id="resetButton" type="button">Reset all</button> <!-- Let the user clear the complete current registration and restart the active scene sequence. -->
+
 <button id="csvButton" type="button">Export CSV</button> <!-- Let the user export the completed native-image point coordinates as a structured B3 input artifact. -->
+
 <button id="pngButton" type="button">Export labeled PNG</button> <!-- Let the user export a full-resolution visual record of the completed point registration. -->
+
 </div> <!-- Finish the scene and registration controls. -->
+
 <div id="status" class="status">Load an image to begin.</div> <!-- Display the next required registration ID and current progress. -->
+
 <div class="viewer"> <!-- Begin the scrollable image workspace. -->
+
 <canvas id="canvas"></canvas> <!-- Create the native-resolution drawing surface used for the aerial image and registered points. -->
+
 </div> <!-- Finish the scrollable image workspace. -->
+
 <script> // Begin the browser-side registration and export logic.
-const sceneIds = { PT_R1: [3, 4, 5, 6, 7, 8, 9, 10, 11], PT_02: Array.from({ length: 22 }, (_, index) => `A${String(index + 1).padStart(2, "0")}`) }; // Freeze the PT_R1 physical tree IDs and create neutral A01 through A22 registration IDs for the lower-certainty PT_02 alleyway scene.
-const sceneMethods = { PT_R1: "manual_field_confirmed_registration", PT_02: "manual_field_count_constrained_registration" }; // Distinguish the high-certainty PT_R1 registration method from the lower-spatial-certainty PT_02 field-count-constrained method.
-const sceneInput = document.getElementById("sceneInput"); // Get the study-scene selector used to determine the active registration sequence.
-const conditionInput = document.getElementById("conditionInput"); // Get the BEFORE or AFTER condition selector used for exported provenance.
+
+const sceneIds = { PT_R1: [3, 4, 5, 6, 7, 8, 9, 10, 11], PT_02: Array.from({ length: 22 }, (_, index) => `A${String(index + 1).padStart(2, "0")}`) }; // Freeze PT_R1 physical tree IDs and create neutral A01 through A22 identifiers for PT_02.
+
+const sceneMethods = { PT_R1: "manual_field_confirmed_registration", PT_02: "manual_field_count_constrained_registration" }; // Distinguish PT_R1 confirmed identity from PT_02 count-constrained spatial registration.
+
+const sceneInput = document.getElementById("sceneInput"); // Get the study-scene selector.
+
+const conditionInput = document.getElementById("conditionInput"); // Get the BEFORE or AFTER condition selector.
+
+const confidenceInput = document.getElementById("confidenceInput"); // Get the PT_02 confidence selector.
+
+const confidenceLabel = document.getElementById("confidenceLabel"); // Get the confidence-control container.
+
 const imageInput = document.getElementById("imageInput"); // Get the local aerial-image file selector.
+
 const zoomInput = document.getElementById("zoomInput"); // Get the display zoom slider.
+
 const zoomValue = document.getElementById("zoomValue"); // Get the visible zoom-percentage label.
-const undoButton = document.getElementById("undoButton"); // Get the button used to remove the latest registered point.
-const resetButton = document.getElementById("resetButton"); // Get the button used to clear all registered points.
-const csvButton = document.getElementById("csvButton"); // Get the button used to export the completed registration as CSV.
-const pngButton = document.getElementById("pngButton"); // Get the button used to export the labeled full-resolution preview.
-const statusText = document.getElementById("status"); // Get the status area used to show registration progress.
-const canvas = document.getElementById("canvas"); // Get the native-resolution aerial-image canvas.
-const context = canvas.getContext("2d"); // Create the two-dimensional drawing context for the image and point labels.
-const image = new Image(); // Create a browser image object that will hold the selected standardized image.
-let imageFilename = ""; // Preserve the original selected image filename for exported provenance.
-let points = []; // Store the manually registered native-image pixel coordinates in active-scene registration order.
-function activeIds() { // Define a helper that returns the required registration identifiers for the selected scene.
-    return sceneIds[sceneInput.value]; // Return either PT_R1 Trees 3 through 11 or PT_02 neutral IDs A01 through A22.
-} // Finish the active-registration-ID helper.
-function updateZoom() { // Define how the displayed image scale changes without modifying native coordinates.
-    const zoomPercent = Number(zoomInput.value); // Read the current zoom percentage from the slider.
-    zoomValue.textContent = `${zoomPercent}%`; // Update the visible zoom-percentage label.
-    if (!image.naturalWidth) return; // Stop if no aerial image has been loaded yet.
-    canvas.style.width = `${image.naturalWidth * zoomPercent / 100}px`; // Scale only the displayed canvas width while retaining native canvas pixels.
-    canvas.style.height = `${image.naturalHeight * zoomPercent / 100}px`; // Scale only the displayed canvas height while retaining native canvas pixels.
+
+const undoButton = document.getElementById("undoButton"); // Get the button used to remove the latest point.
+
+const resetButton = document.getElementById("resetButton"); // Get the button used to clear all points.
+
+const csvButton = document.getElementById("csvButton"); // Get the button used to export the CSV.
+
+const pngButton = document.getElementById("pngButton"); // Get the button used to export the labeled PNG.
+
+const statusText = document.getElementById("status"); // Get the registration-status message.
+
+const canvas = document.getElementById("canvas"); // Get the native-resolution image canvas.
+
+const context = canvas.getContext("2d"); // Create the two-dimensional drawing context.
+
+const image = new Image(); // Create the browser image object used for the selected standardized image.
+
+let imageFilename = ""; // Preserve the original selected image filename for provenance.
+
+let points = []; // Store registered native-image points in required scene order.
+
+function activeIds() { // Define a helper that returns the required identifiers for the active scene.
+
+    return sceneIds[sceneInput.value]; // Return PT_R1 Trees 3 through 11 or PT_02 A01 through A22.
+
+} // Finish the active-ID helper.
+
+function updateConfidenceControl() { // Define when confidence capture is available.
+
+    const isPt02 = sceneInput.value === "PT_02"; // Check whether PT_02 is selected.
+
+    confidenceLabel.style.display = isPt02 ? "inline" : "none"; // Show confidence only for the lower-certainty PT_02 registration.
+
+    confidenceInput.value = ""; // Remove any previously selected confidence value.
+
+} // Finish the confidence-control function.
+
+function updateZoom() { // Define how display zoom changes without modifying native coordinates.
+
+    const zoomPercent = Number(zoomInput.value); // Read the current zoom percentage.
+
+    zoomValue.textContent = `${zoomPercent}%`; // Display the selected zoom percentage.
+
+    if (!image.naturalWidth) return; // Stop if no image has been loaded.
+
+    canvas.style.width = `${image.naturalWidth * zoomPercent / 100}px`; // Scale only the displayed canvas width.
+
+    canvas.style.height = `${image.naturalHeight * zoomPercent / 100}px`; // Scale only the displayed canvas height.
+
 } // Finish the display-zoom function.
-function updateStatus() { // Define how the page reports registration progress.
-    const ids = activeIds(); // Read the required registration identifiers for the currently selected scene.
-    if (!image.naturalWidth) { // Check whether an aerial image has been loaded.
-        statusText.textContent = `Load a ${sceneInput.value} image to begin.`; // Ask the user to load an image associated with the selected scene.
-        return; // Stop because point registration cannot begin without an image.
+
+function updateStatus() { // Define how registration progress is reported.
+
+    const ids = activeIds(); // Read the required identifiers for the active scene.
+
+    if (!image.naturalWidth) { // Check whether an image has been loaded.
+
+        statusText.textContent = `Load a ${sceneInput.value} image to begin.`; // Ask the user to load the selected scene image.
+
+        return; // Stop because registration cannot start without an image.
+
     } // Finish the no-image condition.
-    if (points.length === ids.length) { // Check whether every required registration point has been completed.
-        statusText.textContent = `All ${ids.length} ${sceneInput.value} locations registered. Review carefully, then export the CSV and labeled PNG.`; // Report that the active scene registration is complete.
-        return; // Stop because there is no additional location to register.
+
+    if (points.length === ids.length) { // Check whether every required point has been registered.
+
+        statusText.textContent = `All ${ids.length} ${sceneInput.value} locations registered. Review carefully, then export the CSV and labeled PNG.`; // Report completion.
+
+        return; // Stop because there is no next point.
+
     } // Finish the completed-registration condition.
-    const nextId = ids[points.length]; // Determine which registration identifier must receive the next click.
-    statusText.textContent = `Next click: ${nextId} | Registered ${points.length} of ${ids.length}`; // Display the exact next registration identifier and current progress.
+
+    const nextId = ids[points.length]; // Determine the identifier assigned to the next click.
+
+    if (sceneInput.value === "PT_02" && confidenceInput.value === "") { // Check whether PT_02 still needs a confidence judgment.
+
+        statusText.textContent = `Next click: ${nextId} | Registered ${points.length} of ${ids.length} | Choose confidence first.`; // Tell the user to select confidence before clicking.
+
+        return; // Stop after displaying the confidence reminder.
+
+    } // Finish the missing-confidence condition.
+
+    if (sceneInput.value === "PT_02") { // Check whether PT_02 is active with a selected confidence value.
+
+        statusText.textContent = `Next click: ${nextId} | Registered ${points.length} of ${ids.length} | Confidence: ${confidenceInput.value.toUpperCase()}`; // Display the selected confidence before the click.
+
+        return; // Stop after displaying PT_02 registration status.
+
+    } // Finish the PT_02 status condition.
+
+    statusText.textContent = `Next click: ${nextId} | Registered ${points.length} of ${ids.length}`; // Display normal PT_R1 progress.
+
 } // Finish the registration-status function.
-function draw() { // Define how the untouched aerial image and current point registrations are rendered.
-    if (!image.naturalWidth) return; // Stop if no aerial image has been loaded yet.
-    canvas.width = image.naturalWidth; // Keep the drawing canvas at the exact native image width.
-    canvas.height = image.naturalHeight; // Keep the drawing canvas at the exact native image height.
-    context.drawImage(image, 0, 0); // Draw the untouched aerial image onto the native-resolution canvas.
-    points.forEach((point) => { // Draw every currently registered field-informed tree point.
-        context.beginPath(); // Begin the circular point-marker geometry.
-        context.arc(point.x, point.y, 36, 0, Math.PI * 2); // Draw a visible circle centered on the exact native-image pixel coordinate.
-        context.fillStyle = "red"; // Use red for the interior of the point marker.
-        context.fill(); // Fill the circular point marker.
-        context.lineWidth = 8; // Use a thick marker outline so the point remains visible over vegetation.
-        context.strokeStyle = "white"; // Use white around the marker to separate it from dark canopy.
-        context.stroke(); // Draw the white outline around the point marker.
-        context.font = "bold 60px Arial"; // Use a large native-resolution font for the registration label.
-        context.lineWidth = 10; // Use a thick text outline so the registration ID remains readable over complex imagery.
-        context.strokeStyle = "white"; // Use white around the text for contrast against vegetation.
-        context.strokeText(String(point.registration_id), point.x + 52, point.y - 24); // Draw the outlined registration ID beside its exact point.
-        context.fillStyle = "red"; // Use red for the interior of the registration label.
-        context.fillText(String(point.registration_id), point.x + 52, point.y - 24); // Draw the registration ID beside its exact point.
-    }); // Finish drawing all current field-point registrations.
-    updateZoom(); // Reapply the selected display scale after redrawing the native-resolution canvas.
-    updateStatus(); // Refresh the next-registration instruction after every redraw.
-} // Finish the image-and-registration drawing function.
-function registrationComplete() { // Define a reusable check for whether the active scene registration is complete.
-    return image.naturalWidth && points.length === activeIds().length; // Require a loaded image and exactly the expected number of registrations for the selected scene.
-} // Finish the completed-registration check.
-function resetRegistration() { // Define a reusable reset for any change that invalidates the active coordinate sequence.
+
+function draw() { // Define how the aerial image and registered points are rendered.
+
+    if (!image.naturalWidth) return; // Stop if no image has been loaded.
+
+    canvas.width = image.naturalWidth; // Keep the canvas at the exact native image width.
+
+    canvas.height = image.naturalHeight; // Keep the canvas at the exact native image height.
+
+    context.drawImage(image, 0, 0); // Draw the untouched aerial image onto the canvas.
+
+    points.forEach((point) => { // Draw every registered field-informed point.
+
+        context.beginPath(); // Begin the circular marker geometry.
+
+        context.arc(point.x, point.y, 36, 0, Math.PI * 2); // Draw the marker at the exact native-image coordinate.
+
+        context.fillStyle = "red"; // Use red for the marker interior.
+
+        context.fill(); // Fill the circular marker.
+
+        context.lineWidth = 8; // Use a thick marker outline.
+
+        context.strokeStyle = "white"; // Use white for contrast against canopy.
+
+        context.stroke(); // Draw the marker outline.
+
+        context.font = "bold 60px Arial"; // Use a large native-resolution registration label.
+
+        context.lineWidth = 10; // Use a thick text outline.
+
+        context.strokeStyle = "white"; // Use white around the registration label.
+
+        context.strokeText(String(point.registration_id), point.x + 52, point.y - 24); // Draw the outlined registration ID beside the point.
+
+        context.fillStyle = "red"; // Use red for the registration-label interior.
+
+        context.fillText(String(point.registration_id), point.x + 52, point.y - 24); // Draw the registration ID beside the point.
+
+    }); // Finish drawing all current registrations.
+
+    updateZoom(); // Reapply the selected display zoom after redrawing.
+
+    updateStatus(); // Refresh the registration-status message.
+
+} // Finish the drawing function.
+
+function registrationComplete() { // Define a reusable completion check.
+
+    return image.naturalWidth && points.length === activeIds().length; // Require a loaded image and the exact required number of points.
+
+} // Finish the completion check.
+
+function resetRegistration() { // Define a reusable registration reset.
+
     points = []; // Remove every currently registered point.
-    if (image.naturalWidth) draw(); // Redraw the loaded image without any registrations if an image is currently available.
-    else updateStatus(); // Otherwise refresh the text instruction for the newly selected scene.
-} // Finish the reusable registration-reset function.
-sceneInput.addEventListener("change", resetRegistration); // Clear registrations whenever the study scene changes so PT_R1 and PT_02 points cannot be mixed.
-conditionInput.addEventListener("change", resetRegistration); // Clear registrations whenever BEFORE or AFTER changes so conditions cannot be mixed accidentally.
-imageInput.addEventListener("change", () => { // Respond whenever the user selects a local aerial image.
-    const file = imageInput.files[0]; // Read the single selected aerial-image file.
+
+    confidenceInput.value = ""; // Remove any pending PT_02 confidence selection.
+
+    if (image.naturalWidth) draw(); // Redraw the loaded image without registrations if available.
+
+    else updateStatus(); // Otherwise refresh the scene-specific instruction.
+
+} // Finish the reset function.
+
+sceneInput.addEventListener("change", () => { // Respond whenever the selected study scene changes.
+
+    resetRegistration(); // Remove registrations from the previous scene.
+
+    updateConfidenceControl(); // Show or hide confidence capture for the newly selected scene.
+
+} ); // Finish the scene-change handler.
+
+conditionInput.addEventListener("change", resetRegistration); // Reset registrations whenever BEFORE or AFTER changes.
+
+confidenceInput.addEventListener("change", updateStatus); // Refresh the status message whenever PT_02 confidence changes.
+
+imageInput.addEventListener("change", () => { // Respond whenever the user selects an aerial image.
+
+    const file = imageInput.files[0]; // Read the selected local image file.
+
     if (!file) return; // Stop if the file-selection dialog was canceled.
-    imageFilename = file.name; // Preserve the selected image filename for CSV provenance.
-    points = []; // Reset all existing point registrations because a new image defines a new coordinate space.
-    const objectUrl = URL.createObjectURL(file); // Create a temporary browser-local URL without uploading the selected image anywhere.
-    image.onload = () => { // Define what happens after the selected aerial image finishes loading.
-        URL.revokeObjectURL(objectUrl); // Release the temporary browser-local image URL after loading completes.
-        draw(); // Draw the native-resolution aerial image with an empty registration set.
+
+    imageFilename = file.name; // Preserve the selected filename for exported provenance.
+
+    points = []; // Reset existing registrations for the newly selected image.
+
+    confidenceInput.value = ""; // Clear any pending confidence selection for the new image.
+
+    const objectUrl = URL.createObjectURL(file); // Create a temporary browser-local URL without uploading the image.
+
+    image.onload = () => { // Define what happens when the image finishes loading.
+
+        URL.revokeObjectURL(objectUrl); // Release the temporary browser-local image URL.
+
+        draw(); // Draw the native-resolution image with no registrations.
+
     }; // Finish the image-loaded behavior.
-    image.src = objectUrl; // Load the selected local aerial image into the browser image object.
-}); // Finish the aerial-image selection handler.
-canvas.addEventListener("click", (event) => { // Register the next field-informed tree location whenever the aerial image is clicked.
-    const ids = activeIds(); // Read the currently required registration identifiers.
-    if (!image.naturalWidth) return; // Ignore clicks until an aerial image has been loaded.
-    if (points.length >= ids.length) return; // Ignore extra clicks after the active scene registration is complete.
-    const rectangle = canvas.getBoundingClientRect(); // Measure the displayed canvas position and dimensions in browser coordinates.
-    const nativeX = Math.round((event.clientX - rectangle.left) * canvas.width / rectangle.width); // Convert the displayed click x position into the exact native-image x pixel coordinate.
-    const nativeY = Math.round((event.clientY - rectangle.top) * canvas.height / rectangle.height); // Convert the displayed click y position into the exact native-image y pixel coordinate.
-    const registrationId = ids[points.length]; // Assign the next required scene-specific registration identifier to this click.
-    points.push({ registration_id: registrationId, x: nativeX, y: nativeY }); // Store the registration ID and exact native-image coordinate in click order.
-    draw(); // Redraw the image so the newly registered point and label become visible immediately.
+
+    image.src = objectUrl; // Load the selected image into the browser image object.
+
+}); // Finish the image-selection handler.
+
+canvas.addEventListener("click", (event) => { // Register the next field-informed location when the aerial image is clicked.
+
+    const ids = activeIds(); // Read the active required registration identifiers.
+
+    if (!image.naturalWidth) return; // Ignore clicks until an image has been loaded.
+
+    if (points.length >= ids.length) return; // Ignore extra clicks after registration is complete.
+
+    if (sceneInput.value === "PT_02" && confidenceInput.value === "") { // Require confidence before accepting a PT_02 point.
+
+        alert("Choose HIGH, MEDIUM, or LOW confidence before registering this PT_02 location."); // Explain why the click was rejected.
+
+        return; // Stop without recording the point.
+
+    } // Finish the missing-confidence condition.
+
+    const rectangle = canvas.getBoundingClientRect(); // Measure the currently displayed canvas geometry.
+
+    const nativeX = Math.round((event.clientX - rectangle.left) * canvas.width / rectangle.width); // Convert display-space x into native-image x.
+
+    const nativeY = Math.round((event.clientY - rectangle.top) * canvas.height / rectangle.height); // Convert display-space y into native-image y.
+
+    const registrationId = ids[points.length]; // Assign the next required registration identifier.
+
+    const registrationConfidence = sceneInput.value === "PT_02" ? confidenceInput.value : "not_applicable"; // Preserve explicit PT_02 confidence while leaving PT_R1 unchanged.
+
+    points.push({ registration_id: registrationId, x: nativeX, y: nativeY, registration_confidence: registrationConfidence }); // Store the identifier, exact coordinate, and confidence together.
+
+    confidenceInput.value = ""; // Force an explicit new confidence choice before the next PT_02 click.
+
+    draw(); // Redraw the image with the newly registered point.
+
 }); // Finish the image-click registration handler.
-zoomInput.addEventListener("input", updateZoom); // Update only the displayed image scale whenever the zoom slider changes.
-undoButton.addEventListener("click", () => { // Respond when the user intentionally removes the most recent registration.
-    if (points.length === 0) return; // Do nothing if there are no registered points to remove.
-    points.pop(); // Remove only the most recently registered field-informed location.
-    draw(); // Redraw the image and return the workflow to that registration ID.
+
+zoomInput.addEventListener("input", updateZoom); // Update only display zoom when the slider changes.
+
+undoButton.addEventListener("click", () => { // Respond when the user removes the latest point.
+
+    if (points.length === 0) return; // Do nothing when no points exist.
+
+    points.pop(); // Remove only the most recently registered point.
+
+    confidenceInput.value = ""; // Require a fresh PT_02 confidence choice before replacing the removed point.
+
+    draw(); // Redraw the remaining registrations.
+
 }); // Finish the undo handler.
-resetButton.addEventListener("click", resetRegistration); // Clear every current registration and restart the active scene sequence from its first ID.
-csvButton.addEventListener("click", () => { // Respond when the user requests the structured B3 coordinate artifact.
-    if (!registrationComplete()) { // Check whether every required active-scene point has been registered.
-        alert(`Register all ${activeIds().length} required locations before exporting the CSV.`); // Prevent an incomplete prompt set from being exported accidentally.
-        return; // Stop the export because the registration is incomplete.
+
+resetButton.addEventListener("click", resetRegistration); // Reset the complete active registration when requested.
+
+csvButton.addEventListener("click", () => { // Respond when the user requests the structured coordinate artifact.
+
+    if (!registrationComplete()) { // Check whether the active scene registration is complete.
+
+        alert(`Register all ${activeIds().length} required locations before exporting the CSV.`); // Prevent incomplete research data export.
+
+        return; // Stop the export.
+
     } // Finish the incomplete-registration check.
-    const scene = sceneInput.value; // Read the selected study scene for provenance.
-    const condition = conditionInput.value; // Read the selected BEFORE or AFTER condition for provenance.
-    const method = sceneMethods[scene]; // Read the frozen registration-method label associated with the selected scene.
-    const header = "registration_id,condition,image_stem,image_filename,native_width,native_height,x,y,registration_method\n"; // Define the generalized CSV schema used by later field-guided inference.
-    const rows = points.map((point) => `${point.registration_id},${condition},${scene},${imageFilename},${image.naturalWidth},${image.naturalHeight},${point.x},${point.y},${method}`).join("\n"); // Serialize every scene-specific registration point and its exact native-image coordinate.
-    const csvText = header + rows + "\n"; // Combine the stable CSV header and all completed registration records into one artifact.
-    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" }); // Create the CSV entirely inside the browser without uploading research data anywhere.
-    const objectUrl = URL.createObjectURL(blob); // Create a temporary browser-local URL for the generated CSV artifact.
-    const link = document.createElement("a"); // Create a temporary browser download link used only for this export.
-    link.href = objectUrl; // Attach the generated CSV file to the temporary download link.
-    link.download = `${scene}_${condition}_field_points.csv`; // Give the coordinate artifact a deterministic scene-and-condition-specific filename.
-    link.click(); // Start the browser download of the completed registration CSV.
-    URL.revokeObjectURL(objectUrl); // Release the temporary CSV object URL after the browser begins the download.
-}); // Finish the generalized CSV export handler.
-pngButton.addEventListener("click", () => { // Respond when the user requests the labeled visual registration artifact.
-    if (!registrationComplete()) { // Check whether every required active-scene point has been registered.
-        alert(`Register all ${activeIds().length} required locations before exporting the labeled PNG.`); // Prevent an incomplete visual registration record from being exported accidentally.
-        return; // Stop the export because the registration is incomplete.
+
+    const scene = sceneInput.value; // Read the selected scene.
+
+    const condition = conditionInput.value; // Read the selected BEFORE or AFTER condition.
+
+    const method = sceneMethods[scene]; // Read the frozen scene-specific registration method.
+
+    const header = "registration_id,condition,image_stem,image_filename,native_width,native_height,x,y,registration_method,registration_confidence\n"; // Define the generalized annotation schema including spatial confidence.
+
+    const rows = points.map((point) => `${point.registration_id},${condition},${scene},${imageFilename},${image.naturalWidth},${image.naturalHeight},${point.x},${point.y},${method},${point.registration_confidence}`).join("\n"); // Serialize every completed registration and its explicit confidence judgment.
+
+    const csvText = header + rows + "\n"; // Combine the header and all registration rows.
+
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" }); // Create the CSV entirely inside the browser.
+
+    const objectUrl = URL.createObjectURL(blob); // Create a temporary local URL for the CSV artifact.
+
+    const link = document.createElement("a"); // Create a temporary browser download link.
+
+    link.href = objectUrl; // Attach the generated CSV to the download link.
+
+    link.download = `${scene}_${condition}_field_points.csv`; // Give the CSV a deterministic scene-and-condition filename.
+
+    link.click(); // Start the CSV download.
+
+    URL.revokeObjectURL(objectUrl); // Release the temporary CSV object URL.
+
+}); // Finish the CSV export handler.
+
+pngButton.addEventListener("click", () => { // Respond when the user requests the labeled visual artifact.
+
+    if (!registrationComplete()) { // Check whether the active registration is complete.
+
+        alert(`Register all ${activeIds().length} required locations before exporting the labeled PNG.`); // Prevent incomplete preview export.
+
+        return; // Stop the export.
+
     } // Finish the incomplete-registration check.
-    const scene = sceneInput.value; // Read the selected scene for the deterministic output filename.
-    const condition = conditionInput.value; // Read the selected condition for the deterministic output filename.
-    const link = document.createElement("a"); // Create a temporary browser download link used only for this labeled PNG export.
-    link.href = canvas.toDataURL("image/png"); // Encode the native-resolution aerial image and visible registration labels into a PNG entirely inside the browser.
-    link.download = `${scene}_${condition}_field_points_preview.png`; // Give the visual registration artifact a deterministic scene-and-condition-specific filename.
-    link.click(); // Start the browser download of the full-resolution labeled registration preview.
-}); // Finish the generalized labeled PNG export handler.
-updateStatus(); // Initialize the interface with the correct selected-scene instruction before an image is loaded.
+
+    const scene = sceneInput.value; // Read the selected scene.
+
+    const condition = conditionInput.value; // Read the selected condition.
+
+    const link = document.createElement("a"); // Create a temporary browser download link.
+
+    link.href = canvas.toDataURL("image/png"); // Encode the native-resolution aerial image and labels into a PNG.
+
+    link.download = `${scene}_${condition}_field_points_preview.png`; // Give the visual artifact a deterministic filename.
+
+    link.click(); // Start the labeled PNG download.
+
+}); // Finish the labeled PNG export handler.
+
+updateConfidenceControl(); // Initialize confidence visibility correctly for the default scene.
+
+updateStatus(); // Initialize the scene-specific registration instruction.
+
 </script> <!-- Finish the browser-side registration and export logic. -->
+
 </body> <!-- Finish the visible page content. -->
 </html> <!-- Finish the HTML document. -->
