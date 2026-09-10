@@ -8,55 +8,114 @@
 body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; } /* Give the page a simple readable layout. */
 h1 { margin-bottom: 8px; } /* Keep the title visually close to the explanatory text. */
 .note { max-width: 900px; line-height: 1.5; } /* Keep the methodological note readable on wide screens. */
-.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the image-loading and zoom controls in a compact row. */
+.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the image controls and registration buttons in a compact row. */
+.status { font-weight: bold; margin: 12px 0; } /* Make the current registration instruction easy to see. */
 .viewer { width: 100%; height: 72vh; overflow: auto; background: #222; border: 1px solid #999; } /* Create a scrollable workspace for the high-resolution aerial image. */
-canvas { display: block; } /* Display the image canvas without extra inline spacing. */
-input { font-size: 14px; } /* Keep the browser controls easy to read and use. */
+canvas { display: block; cursor: crosshair; } /* Display the aerial image as a clickable canvas with a crosshair pointer. */
+input, button { font-size: 14px; padding: 6px 10px; } /* Keep the browser controls easy to read and use. */
 </style> <!-- Finish the page styling rules. -->
 </head> <!-- Finish the page metadata section. -->
 <body> <!-- Begin the visible page content. -->
 <h1>PT_R1 Field Point Registration</h1> <!-- Display the utility name. -->
 <p class="note">Register field-confirmed Trees 3 through 11 onto the standardized PT_R1 aerial imagery using one interior crown point per tree.</p> <!-- State the purpose of the B3 registration utility. -->
 <p class="note">Points must be registered before SAM2 inference and must not be moved based on SAM2 output.</p> <!-- State the anti-tuning rule directly in the interface. -->
-<div class="controls"> <!-- Begin the image-loading and display controls. -->
+<div class="controls"> <!-- Begin the image and registration controls. -->
 <label>Image <input id="imageInput" type="file" accept="image/*"></label> <!-- Let the user choose the standardized PT_R1 image from the local computer. -->
 <label>Zoom <input id="zoomInput" type="range" min="10" max="100" value="25" step="5"></label> <!-- Let the user change only the displayed image size while preserving native pixel coordinates. -->
 <span id="zoomValue">25%</span> <!-- Display the current zoom percentage beside the slider. -->
-</div> <!-- Finish the image-loading and display controls. -->
-<div id="status">Load a PT_R1 image to begin.</div> <!-- Show whether an aerial image has been loaded successfully. -->
+<button id="undoButton" type="button">Undo last point</button> <!-- Let the user remove the most recently registered tree point. -->
+<button id="resetButton" type="button">Reset all</button> <!-- Let the user clear the complete current registration and restart at Tree 3. -->
+</div> <!-- Finish the image and registration controls. -->
+<div id="status" class="status">Load a PT_R1 image to begin.</div> <!-- Display the next required field tree and current registration progress. -->
 <div class="viewer"> <!-- Begin the scrollable image workspace. -->
-<canvas id="canvas"></canvas> <!-- Create the native-resolution drawing surface used to display the aerial image. -->
+<canvas id="canvas"></canvas> <!-- Create the native-resolution drawing surface used for the aerial image and registered points. -->
 </div> <!-- Finish the scrollable image workspace. -->
-<script> // Begin the browser-side image-loading logic.
+<script> // Begin the browser-side registration logic.
+const treeIds = [3, 4, 5, 6, 7, 8, 9, 10, 11]; // Freeze the nine field-confirmed PT_R1 tree IDs in required registration order.
 const imageInput = document.getElementById("imageInput"); // Get the local aerial-image file selector.
 const zoomInput = document.getElementById("zoomInput"); // Get the display zoom slider.
 const zoomValue = document.getElementById("zoomValue"); // Get the visible zoom-percentage label.
-const statusText = document.getElementById("status"); // Get the image-loading status message.
+const undoButton = document.getElementById("undoButton"); // Get the button used to remove the latest registered point.
+const resetButton = document.getElementById("resetButton"); // Get the button used to clear all registered points.
+const statusText = document.getElementById("status"); // Get the status area used to show registration progress.
 const canvas = document.getElementById("canvas"); // Get the native-resolution aerial-image canvas.
-const context = canvas.getContext("2d"); // Create the two-dimensional drawing context for the canvas.
+const context = canvas.getContext("2d"); // Create the two-dimensional drawing context for the image and point labels.
 const image = new Image(); // Create a browser image object that will hold the selected PT_R1 image.
-function updateZoom() { // Define how the displayed image scale changes.
+let points = []; // Store the manually registered native-image pixel coordinates in tree-ID order.
+function updateZoom() { // Define how the displayed image scale changes without modifying native coordinates.
     const zoomPercent = Number(zoomInput.value); // Read the current zoom percentage from the slider.
     zoomValue.textContent = `${zoomPercent}%`; // Update the visible zoom-percentage label.
     if (!image.naturalWidth) return; // Stop if no aerial image has been loaded yet.
-    canvas.style.width = `${image.naturalWidth * zoomPercent / 100}px`; // Scale the displayed canvas width without changing native image pixels.
-    canvas.style.height = `${image.naturalHeight * zoomPercent / 100}px`; // Scale the displayed canvas height without changing native image pixels.
+    canvas.style.width = `${image.naturalWidth * zoomPercent / 100}px`; // Scale only the displayed canvas width while retaining native canvas pixels.
+    canvas.style.height = `${image.naturalHeight * zoomPercent / 100}px`; // Scale only the displayed canvas height while retaining native canvas pixels.
 } // Finish the display-zoom function.
-imageInput.addEventListener("change", () => { // Respond when the user selects a local aerial image.
-    const file = imageInput.files[0]; // Read the selected image file from the browser control.
+function updateStatus() { // Define how the page reports registration progress.
+    if (!image.naturalWidth) { // Check whether an aerial image has been loaded.
+        statusText.textContent = "Load a PT_R1 image to begin."; // Ask the user to load an image when none is present.
+        return; // Stop because point registration cannot begin without an image.
+    } // Finish the no-image condition.
+    if (points.length === treeIds.length) { // Check whether all nine field-confirmed trees have been registered.
+        statusText.textContent = "All 9 trees registered. Review the labels carefully before the next step."; // Report completion without running or exporting anything yet.
+        return; // Stop because there is no additional tree to register.
+    } // Finish the completed-registration condition.
+    const nextTreeId = treeIds[points.length]; // Determine which field-confirmed tree must receive the next click.
+    statusText.textContent = `Next click: Tree ${nextTreeId} | Registered ${points.length} of ${treeIds.length}`; // Display the required next tree and current progress.
+} // Finish the registration-status function.
+function draw() { // Define how the untouched aerial image and current point registrations are rendered.
+    if (!image.naturalWidth) return; // Stop if no aerial image has been loaded yet.
+    canvas.width = image.naturalWidth; // Keep the drawing canvas at the exact native image width.
+    canvas.height = image.naturalHeight; // Keep the drawing canvas at the exact native image height.
+    context.drawImage(image, 0, 0); // Draw the untouched aerial image onto the native-resolution canvas.
+    points.forEach((point) => { // Draw every currently registered field-confirmed tree point.
+        context.beginPath(); // Begin the circular point-marker geometry.
+        context.arc(point.x, point.y, 36, 0, Math.PI * 2); // Draw a visible circle centered on the exact native-image pixel coordinate.
+        context.fillStyle = "red"; // Use red for the interior of the point marker.
+        context.fill(); // Fill the circular point marker.
+        context.lineWidth = 8; // Use a thick marker outline so the point remains visible over vegetation.
+        context.strokeStyle = "white"; // Use white around the marker to separate it from dark canopy.
+        context.stroke(); // Draw the white outline around the point marker.
+        context.font = "bold 60px Arial"; // Use a large native-resolution font for the tree ID label.
+        context.lineWidth = 10; // Use a thick text outline so the tree ID remains readable over complex imagery.
+        context.strokeStyle = "white"; // Use white around the text for contrast against vegetation.
+        context.strokeText(`T${point.tree_id}`, point.x + 52, point.y - 24); // Draw the outlined field tree ID beside its registered point.
+        context.fillStyle = "red"; // Use red for the interior of the tree ID label.
+        context.fillText(`T${point.tree_id}`, point.x + 52, point.y - 24); // Draw the field tree ID beside its registered point.
+    }); // Finish drawing all current field-point registrations.
+    updateZoom(); // Reapply the selected display scale after redrawing the native-resolution canvas.
+    updateStatus(); // Refresh the next-tree instruction after every redraw.
+} // Finish the image-and-registration drawing function.
+imageInput.addEventListener("change", () => { // Respond whenever the user selects a local aerial image.
+    const file = imageInput.files[0]; // Read the single selected aerial-image file.
     if (!file) return; // Stop if the file-selection dialog was canceled.
-    const objectUrl = URL.createObjectURL(file); // Create a temporary browser-local URL without uploading the image anywhere.
+    points = []; // Reset all existing point registrations because a new image defines a new coordinate space.
+    const objectUrl = URL.createObjectURL(file); // Create a temporary browser-local URL without uploading the selected image anywhere.
     image.onload = () => { // Define what happens after the selected aerial image finishes loading.
-        canvas.width = image.naturalWidth; // Set the canvas width to the exact native image width.
-        canvas.height = image.naturalHeight; // Set the canvas height to the exact native image height.
-        context.drawImage(image, 0, 0); // Draw the untouched aerial image onto the native-resolution canvas.
-        statusText.textContent = `Loaded ${file.name} at ${image.naturalWidth} x ${image.naturalHeight} native pixels.`; // Report the exact loaded image dimensions for verification.
-        updateZoom(); // Apply the currently selected display zoom after loading the native image.
         URL.revokeObjectURL(objectUrl); // Release the temporary browser-local image URL after loading completes.
+        draw(); // Draw the native-resolution aerial image with an empty registration set.
     }; // Finish the image-loaded behavior.
-    image.src = objectUrl; // Load the selected local image into the browser image object.
+    image.src = objectUrl; // Load the selected local aerial image into the browser image object.
 }); // Finish the aerial-image selection handler.
-zoomInput.addEventListener("input", updateZoom); // Update the displayed image scale whenever the zoom slider moves.
-</script> <!-- Finish the browser-side image-loading logic. -->
+canvas.addEventListener("click", (event) => { // Register the next field-confirmed tree whenever the aerial image is clicked.
+    if (!image.naturalWidth) return; // Ignore clicks until an aerial image has been loaded.
+    if (points.length >= treeIds.length) return; // Ignore extra clicks after all nine field-confirmed trees have been registered.
+    const rectangle = canvas.getBoundingClientRect(); // Measure the displayed canvas position and dimensions in browser coordinates.
+    const nativeX = Math.round((event.clientX - rectangle.left) * canvas.width / rectangle.width); // Convert the displayed click x position into the exact native-image x pixel coordinate.
+    const nativeY = Math.round((event.clientY - rectangle.top) * canvas.height / rectangle.height); // Convert the displayed click y position into the exact native-image y pixel coordinate.
+    const treeId = treeIds[points.length]; // Assign the next required field-confirmed tree ID to this click.
+    points.push({ tree_id: treeId, x: nativeX, y: nativeY }); // Store the tree ID and exact native-image pixel coordinate in registration order.
+    draw(); // Redraw the image so the newly registered tree point and label become visible immediately.
+}); // Finish the image-click registration handler.
+zoomInput.addEventListener("input", updateZoom); // Update only the displayed image scale whenever the zoom slider changes.
+undoButton.addEventListener("click", () => { // Respond when the user intentionally removes the most recent registration.
+    if (points.length === 0) return; // Do nothing if there are no registered points to remove.
+    points.pop(); // Remove only the most recently registered field tree point.
+    draw(); // Redraw the image and return the workflow to that tree ID.
+}); // Finish the undo handler.
+resetButton.addEventListener("click", () => { // Respond when the user intentionally resets the entire registration.
+    points = []; // Remove every currently registered field tree point.
+    draw(); // Redraw the untouched aerial image and restart the sequence at Tree 3.
+}); // Finish the reset handler.
+updateStatus(); // Initialize the interface with the correct instruction before an image is selected.
+</script> <!-- Finish the browser-side registration logic. -->
 </body> <!-- Finish the visible page content. -->
 </html> <!-- Finish the HTML document. -->
