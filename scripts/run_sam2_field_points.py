@@ -49,8 +49,9 @@ EXPECTED_NATIVE_SHA256 = {  # Freeze the previously verified SHA-256 identities 
 EXPECTED_FIELD_POINTS_SHA256 = {  # Freeze only field-point annotation artifacts that already exist and were committed before inference.
     ("before", "PT_R1"): "830721c5f19ce9035f68a2f5261e6b338c579edc7df26e1b29ff43e50790017c",  # Preserve the verified PT_R1 BEFORE point-registration identity.
     ("after", "PT_R1"): "e3793dceb6f94a76cf244d5c25d10497c50c3c76525452c92d09f0ece334ad54",  # Preserve the verified PT_R1 AFTER point-registration identity.
-    ("before", "PT_02"): "43bc6786e2c558dcd5044f8f140f730817e68b445d1a48ed242f18d2bafb20ed",  # Preserve the newly frozen PT_02 BEFORE 22-point registration identity.
-}  # Intentionally omit PT_02 AFTER so inference cannot occur until that registration is created, committed, hashed, and explicitly frozen here.
+    ("before", "PT_02"): "43bc6786e2c558dcd5044f8f140f730817e68b445d1a48ed242f18d2bafb20ed",  # Preserve the verified PT_02 BEFORE 22-point registration identity.
+    ("after", "PT_02"): "f77cc5998ca4e0d6a6eff03c3174cb3dd3ca3bddf8ddd9a7166cee2cec6f64b6",  # Preserve the independently frozen PT_02 AFTER 22-point registration identity.
+}  # Finish the frozen field-point SHA-256 mapping.
 
 VALID_PT02_CONFIDENCE = {"high", "medium", "low"}  # Freeze the only permitted spatial-registration confidence labels for PT_02.
 
