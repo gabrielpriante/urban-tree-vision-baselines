@@ -8,11 +8,11 @@
 body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; } /* Give the page a simple readable layout. */
 h1 { margin-bottom: 8px; } /* Keep the title visually close to the explanatory text. */
 .note { max-width: 900px; line-height: 1.5; } /* Keep the methodological note readable on wide screens. */
-.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the image controls and registration buttons in a compact row. */
+.controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin: 16px 0; } /* Arrange the image, condition, zoom, registration, and export controls in a compact row. */
 .status { font-weight: bold; margin: 12px 0; } /* Make the current registration instruction easy to see. */
 .viewer { width: 100%; height: 72vh; overflow: auto; background: #222; border: 1px solid #999; } /* Create a scrollable workspace for the high-resolution aerial image. */
 canvas { display: block; cursor: crosshair; } /* Display the aerial image as a clickable canvas with a crosshair pointer. */
-input, button { font-size: 14px; padding: 6px 10px; } /* Keep the browser controls easy to read and use. */
+input, select, button { font-size: 14px; padding: 6px 10px; } /* Keep all browser controls easy to read and use. */
 </style> <!-- Finish the page styling rules. -->
 </head> <!-- Finish the page metadata section. -->
 <body> <!-- Begin the visible page content. -->
@@ -20,27 +20,34 @@ input, button { font-size: 14px; padding: 6px 10px; } /* Keep the browser contro
 <p class="note">Register field-confirmed Trees 3 through 11 onto the standardized PT_R1 aerial imagery using one interior crown point per tree.</p> <!-- State the purpose of the B3 registration utility. -->
 <p class="note">Points must be registered before SAM2 inference and must not be moved based on SAM2 output.</p> <!-- State the anti-tuning rule directly in the interface. -->
 <div class="controls"> <!-- Begin the image and registration controls. -->
+<label>Condition <select id="conditionInput"><option value="before">BEFORE</option><option value="after">AFTER</option></select></label> <!-- Record whether the manually registered image is the BEFORE or AFTER standardized observation. -->
 <label>Image <input id="imageInput" type="file" accept="image/*"></label> <!-- Let the user choose the standardized PT_R1 image from the local computer. -->
 <label>Zoom <input id="zoomInput" type="range" min="10" max="100" value="25" step="5"></label> <!-- Let the user change only the displayed image size while preserving native pixel coordinates. -->
 <span id="zoomValue">25%</span> <!-- Display the current zoom percentage beside the slider. -->
 <button id="undoButton" type="button">Undo last point</button> <!-- Let the user remove the most recently registered tree point. -->
 <button id="resetButton" type="button">Reset all</button> <!-- Let the user clear the complete current registration and restart at Tree 3. -->
+<button id="csvButton" type="button">Export CSV</button> <!-- Let the user export the completed native-image point coordinates as a structured B3 input artifact. -->
+<button id="pngButton" type="button">Export labeled PNG</button> <!-- Let the user export a full-resolution visual record of the completed point registration. -->
 </div> <!-- Finish the image and registration controls. -->
 <div id="status" class="status">Load a PT_R1 image to begin.</div> <!-- Display the next required field tree and current registration progress. -->
 <div class="viewer"> <!-- Begin the scrollable image workspace. -->
 <canvas id="canvas"></canvas> <!-- Create the native-resolution drawing surface used for the aerial image and registered points. -->
 </div> <!-- Finish the scrollable image workspace. -->
-<script> // Begin the browser-side registration logic.
+<script> // Begin the browser-side registration and export logic.
 const treeIds = [3, 4, 5, 6, 7, 8, 9, 10, 11]; // Freeze the nine field-confirmed PT_R1 tree IDs in required registration order.
+const conditionInput = document.getElementById("conditionInput"); // Get the BEFORE or AFTER condition selector used for exported provenance.
 const imageInput = document.getElementById("imageInput"); // Get the local aerial-image file selector.
 const zoomInput = document.getElementById("zoomInput"); // Get the display zoom slider.
 const zoomValue = document.getElementById("zoomValue"); // Get the visible zoom-percentage label.
 const undoButton = document.getElementById("undoButton"); // Get the button used to remove the latest registered point.
 const resetButton = document.getElementById("resetButton"); // Get the button used to clear all registered points.
+const csvButton = document.getElementById("csvButton"); // Get the button used to export the completed registration as CSV.
+const pngButton = document.getElementById("pngButton"); // Get the button used to export the labeled full-resolution preview.
 const statusText = document.getElementById("status"); // Get the status area used to show registration progress.
 const canvas = document.getElementById("canvas"); // Get the native-resolution aerial-image canvas.
 const context = canvas.getContext("2d"); // Create the two-dimensional drawing context for the image and point labels.
 const image = new Image(); // Create a browser image object that will hold the selected PT_R1 image.
+let imageFilename = ""; // Preserve the original selected image filename for exported provenance.
 let points = []; // Store the manually registered native-image pixel coordinates in tree-ID order.
 function updateZoom() { // Define how the displayed image scale changes without modifying native coordinates.
     const zoomPercent = Number(zoomInput.value); // Read the current zoom percentage from the slider.
@@ -55,7 +62,7 @@ function updateStatus() { // Define how the page reports registration progress.
         return; // Stop because point registration cannot begin without an image.
     } // Finish the no-image condition.
     if (points.length === treeIds.length) { // Check whether all nine field-confirmed trees have been registered.
-        statusText.textContent = "All 9 trees registered. Review the labels carefully before the next step."; // Report completion without running or exporting anything yet.
+        statusText.textContent = "All 9 trees registered. Review carefully, then export the CSV and labeled PNG."; // Report that the registration is complete and ready for artifact export.
         return; // Stop because there is no additional tree to register.
     } // Finish the completed-registration condition.
     const nextTreeId = treeIds[points.length]; // Determine which field-confirmed tree must receive the next click.
@@ -84,9 +91,13 @@ function draw() { // Define how the untouched aerial image and current point reg
     updateZoom(); // Reapply the selected display scale after redrawing the native-resolution canvas.
     updateStatus(); // Refresh the next-tree instruction after every redraw.
 } // Finish the image-and-registration drawing function.
+function registrationComplete() { // Define a reusable check for whether a B3 annotation set is complete.
+    return image.naturalWidth && points.length === treeIds.length; // Require a loaded image and exactly nine field-confirmed point registrations.
+} // Finish the completed-registration check.
 imageInput.addEventListener("change", () => { // Respond whenever the user selects a local aerial image.
     const file = imageInput.files[0]; // Read the single selected aerial-image file.
     if (!file) return; // Stop if the file-selection dialog was canceled.
+    imageFilename = file.name; // Preserve the selected image filename for CSV provenance.
     points = []; // Reset all existing point registrations because a new image defines a new coordinate space.
     const objectUrl = URL.createObjectURL(file); // Create a temporary browser-local URL without uploading the selected image anywhere.
     image.onload = () => { // Define what happens after the selected aerial image finishes loading.
@@ -115,7 +126,35 @@ resetButton.addEventListener("click", () => { // Respond when the user intention
     points = []; // Remove every currently registered field tree point.
     draw(); // Redraw the untouched aerial image and restart the sequence at Tree 3.
 }); // Finish the reset handler.
+csvButton.addEventListener("click", () => { // Respond when the user requests the structured B3 coordinate artifact.
+    if (!registrationComplete()) { // Check whether all nine required tree points have been registered.
+        alert("Register all nine field-confirmed trees before exporting the CSV."); // Prevent an incomplete B3 prompt set from being exported accidentally.
+        return; // Stop the export because the registration is incomplete.
+    } // Finish the incomplete-registration check.
+    const condition = conditionInput.value; // Read the selected BEFORE or AFTER condition for provenance.
+    const header = "tree_id,condition,image_stem,image_filename,native_width,native_height,x,y,registration_method\n"; // Define the stable CSV schema used by later B3 inference.
+    const rows = points.map((point) => `${point.tree_id},${condition},PT_R1,${imageFilename},${image.naturalWidth},${image.naturalHeight},${point.x},${point.y},manual_field_confirmed_registration`).join("\n"); // Serialize every field-confirmed tree and exact native-image point in required tree-ID order.
+    const csvText = header + rows + "\n"; // Combine the CSV header and all nine registration records into one text artifact.
+    const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" }); // Create the CSV file entirely inside the browser without uploading field data anywhere.
+    const objectUrl = URL.createObjectURL(blob); // Create a temporary browser-local URL for the generated CSV file.
+    const link = document.createElement("a"); // Create a temporary download link used only for this export.
+    link.href = objectUrl; // Attach the generated CSV file to the temporary download link.
+    link.download = `PT_R1_${condition}_field_points.csv`; // Give the exported coordinate artifact a deterministic B3 filename.
+    link.click(); // Start the browser download of the completed field-point registration CSV.
+    URL.revokeObjectURL(objectUrl); // Release the temporary CSV object URL after the browser begins the download.
+}); // Finish the CSV export handler.
+pngButton.addEventListener("click", () => { // Respond when the user requests the labeled visual registration artifact.
+    if (!registrationComplete()) { // Check whether all nine required tree points have been registered.
+        alert("Register all nine field-confirmed trees before exporting the labeled PNG."); // Prevent an incomplete visual registration record from being exported accidentally.
+        return; // Stop the export because the registration is incomplete.
+    } // Finish the incomplete-registration check.
+    const condition = conditionInput.value; // Read the selected BEFORE or AFTER condition for the deterministic output filename.
+    const link = document.createElement("a"); // Create a temporary download link used only for this labeled PNG export.
+    link.href = canvas.toDataURL("image/png"); // Encode the native-resolution aerial image and visible tree labels into a PNG entirely inside the browser.
+    link.download = `PT_R1_${condition}_field_points_preview.png`; // Give the visual registration artifact a deterministic B3 filename.
+    link.click(); // Start the browser download of the full-resolution labeled registration preview.
+}); // Finish the labeled PNG export handler.
 updateStatus(); // Initialize the interface with the correct instruction before an image is selected.
-</script> <!-- Finish the browser-side registration logic. -->
+</script> <!-- Finish the browser-side registration and export logic. -->
 </body> <!-- Finish the visible page content. -->
 </html> <!-- Finish the HTML document. -->
