@@ -1,3 +1,29 @@
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ sha256sum data/annotations/experiment_001/b3_field_points/before/PT_02/PT_02_before_field_points.csv # Reconfirm that the CSV contents still have the frozen SHA-256 value after changing only its file permissions.
+43bc6786e2c558dcd5044f8f140f730817e68b445d1a48ed242f18d2bafb20ed  data/annotations/experiment_001/b3_field_points/before/PT_02/PT_02_before_field_points.csv
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git add data/annotations/experiment_001/b3_field_points/before/PT_02/PT_02_before_field_points.csv # Stage only the corrected non-executable file mode for the frozen PT_02 BEFORE annotation CSV.
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git diff --cached --summary # Confirm that the staged change remains only a 100755 to 100644 file-mode correction with no content modification.
+ mode change 100755 => 100644 data/annotations/experiment_001/b3_field_points/before/PT_02/PT_02_before_field_points.csv
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git diff --cached --check # Confirm that the staged housekeeping change contains no whitespace problems.
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git commit -m "Fix PT_02 annotation file mode" # Preserve the normal data-file permission for the frozen PT_02 BEFORE annotation without changing its research contents.
+[main 3d19b5a] Fix PT_02 annotation file mode
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ mode change 100755 => 100644 data/annotations/experiment_001/b3_field_points/before/PT_02/PT_02_before_field_points.csv
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git push origin main # Publish the annotation permission cleanup before modifying the SAM2 inference workflow.
+Enumerating objects: 15, done.
+Counting objects: 100% (15/15), done.
+Delta compression using up to 20 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (8/8), 658 bytes | 658.00 KiB/s, done.
+Total 8 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/gabrielpriante/urban-tree-vision-baselines.git
+   8879074..3d19b5a  main -> main
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ git status # Confirm that the repository is clean and synchronized before generalizing B3 inference for PT_02.
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$ sed -n '1,360p' scripts/run_sam2_field_points.py # Display the complete currently frozen PT_R1 B3 inference implementation so the PT_02 generalization can preserve every existing provenance and validation safeguard.
 import argparse  # Import argparse so the before or after PT_R1 condition is specified explicitly at runtime.
 import csv  # Import csv so the frozen field-point registration table can be read without adding another dependency.
 import hashlib  # Import hashlib so every B3 input artifact can be verified by SHA-256 before inference.
@@ -107,4 +133,4 @@ print(f"Positive point prompts: {len(field_rows)}")  # Report the exact number o
 print(f"SAM2 masks: {len(results)}")  # Report the resulting mask count so the expected one-to-one field-tree mapping is immediately visible.
 print(f"Elapsed seconds: {elapsed_seconds:.2f}")  # Report total wall-clock B3 inference duration.
 print(f"Peak GPU memory MB: {peak_gpu_memory_mb:.2f}")  # Report peak allocated GPU memory during the complete B3 run.
-print(f"Output: {output_path}")  # Report the machine-readable B3 prediction location.
+print(f"Output: {output_path}")  # Report the machine-readable B3 prediction location.(sam2) gabpe@gps2:~/src/urban-tree-vision-baselines$
