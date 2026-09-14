@@ -32,4 +32,4 @@ DSM/DTM Derived from Orthomosaic was attained through purchasing the geonadir pr
 
 RAW FILES -> Not currently publicly available. Will leverage cloud compute to set up an appropriate evironment.
 
-
+This is where GEONADIR/RGB processing software enters the equation and must be considered as part of our specific questions/research.
