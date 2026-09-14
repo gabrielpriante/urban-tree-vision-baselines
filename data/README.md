@@ -23,3 +23,7 @@ A machine-readable image manifest will be maintained at `data/manifest.csv`.
 The manifest will provide stable identifiers and metadata for every image included in an experiment.
 
 Model inference scripts should reference images through the manifest rather than relying on manually entered file paths.
+
+## Orthomosaic 
+
+From geonadir.com. Uploaded automated imagery from DJI Mini 5 pro and created 10 Orthomosaics on 09/05/2026.
