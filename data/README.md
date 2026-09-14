@@ -27,3 +27,9 @@ Model inference scripts should reference images through the manifest rather than
 ## Orthomosaic 
 
 From geonadir.com. Uploaded automated imagery from DJI Mini 5 pro and created 10 Orthomosaics on 09/05/2026.
+
+DSM/DTM Derived from Orthomosaic was attained through purchasing the geonadir pro subscription. 
+
+RAW FILES -> Not currently publicly available. Will leverage cloud compute to set up an appropriate evironment.
+
+
