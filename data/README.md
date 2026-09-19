@@ -37,3 +37,5 @@ This is where geonadir/RGB-processing software enters the equation and must be c
 Collected 34 species data on 09/19/2026
 
 Identified 2 more trees in R1 w/ expert guidance
+
+Potentially a possible tool + workflow contribution
