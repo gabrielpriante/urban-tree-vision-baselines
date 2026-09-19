@@ -33,3 +33,5 @@ DSM/DTM Derived from Orthomosaic was attained through purchasing the geonadir pr
 RAW FILES -> Not currently publicly available. Will leverage cloud compute to set up an appropriate evironment.
 
 This is where geonadir/RGB-processing software enters the equation and must be considered as part of our specific questions/research.
+
+Collected 34 species data on 09/19/2026
