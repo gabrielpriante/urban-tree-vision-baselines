@@ -41,3 +41,5 @@ Identified 2 more trees in R1 w/ expert guidance
 Potentially a possible tool + workflow contribution
 
 Transferred species info to input table
+
+Input location data to input table
