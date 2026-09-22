@@ -43,3 +43,5 @@ Potentially a possible tool + workflow contribution
 Transferred species info to input table
 
 Input location data to input table
+
+09/22/2026: Used DSM - DTM to gather estimated tree heights
