@@ -21,5 +21,7 @@ Most recent outputs: Imagery from 09/17/2026 using standardized prompt
 # Post Processing Outputs
 
 CHM = DSM - DTM
-- PT-O2-CHM-RAW
+- PT-02-CHM-RAW
 - PT-02-CHM-CLEAN
+- PT-02-CHM-2M
+- PT-02-CHM-2M-No Data
