@@ -21,7 +21,7 @@ Most recent outputs: Imagery from 09/17/2026 using standardized prompt
 # Post Processing Outputs
 
 CHM = DSM - DTM
-- PT-02-CHM-RAW
-- PT-02-CHM-CLEAN
-- PT-02-CHM-2M
-- PT-02-CHM-2M-No Data
+- PT-02-CHM-RAW (RAW FILE FROM ABOVE RASTER CALCULATION)
+- PT-02-CHM-CLEAN (Correcting for negative values)
+- PT-02-CHM-2M Everything over 2m and up)
+- PT-02-CHM-2M-No-Data (Just the canopy)
