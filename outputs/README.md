@@ -18,7 +18,7 @@ Selected finalized results may later be added to the repository deliberately whe
 
 Most recent outputs: Imagery from 09/17/2026 using standardized prompt
 
-#Post Processing Outputs
+# Post Processing Outputs
 
 CHM = DSM - DTM
 - PT-O2-CHM-RAW
