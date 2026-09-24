@@ -27,3 +27,4 @@ CHM = DSM - DTM
 - PT-02-CHM-2M-No-Data (Just the canopy)
 
 - Zonal statistics BEFORE
+- Zonal statistics AFTER
