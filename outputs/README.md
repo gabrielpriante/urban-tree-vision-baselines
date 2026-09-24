@@ -25,3 +25,5 @@ CHM = DSM - DTM
 - PT-02-CHM-CLEAN (Correcting for negative values)
 - PT-02-CHM-2M (Everything over 2m and up)
 - PT-02-CHM-2M-No-Data (Just the canopy)
+
+- Zonal statistics BEFORE
