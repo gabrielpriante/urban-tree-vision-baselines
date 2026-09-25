@@ -52,3 +52,4 @@ Currently working on creating AOI based on RGB per orthomosaic.
 
 - PT-02-BEFORE-WEEK1 Analysis (GIS Derivations)
 - PT-02-AFTER-WEEK1 Analysis (GIS Derivations)
+- PT-R1-BEFORE-WEEK1 Analysis (GIS Derivations)
