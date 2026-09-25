@@ -1,4 +1,4 @@
-# Import sys so the input image path can be supplied from the command line.
+# Import sys so the script can receive the input image path and optional run label from the command line.
 import sys
 
 # Import Path so input and output filesystem paths are handled consistently.
@@ -18,15 +18,24 @@ TARGET_GSD_CM = 7.89
 # Read the input image path supplied as the first command-line argument.
 input_path = Path(sys.argv[1])
 
+# Read an optional benchmark run label such as "week3".
+run_label = sys.argv[2] if len(sys.argv) > 2 else None
+
 # Stop immediately with a clear error if the requested input image does not exist.
 if not input_path.exists():
     raise FileNotFoundError(f"Input image not found: {input_path}")
 
 # Read the experimental condition from the image's parent directory.
-condition = input_path.parent.name
+condition = input_path.parent.name.lower()
 
-# Define the directory where scale-adjusted derived imagery will be stored locally.
-output_dir = Path("data/derived/experiment_001/gsd_7.89") / condition
+# Define the historical base directory for 7.89 cm/pixel derived imagery.
+output_root = Path("data/derived/experiment_001/gsd_7.89")
+
+# Add the benchmark run label when one is explicitly supplied.
+output_root = output_root / run_label if run_label else output_root
+
+# Define the condition-specific directory for the derived imagery.
+output_dir = output_root / condition
 
 # Create the derived-image output directory and any missing parent directories.
 output_dir.mkdir(parents=True, exist_ok=True)
@@ -36,7 +45,6 @@ resize_factor = NATIVE_GSD_CM / TARGET_GSD_CM
 
 # Open the untouched original JPEG.
 with Image.open(input_path) as image:
-
     # Calculate the target image width while preserving the original physical image extent.
     target_width = round(image.width * resize_factor)
 
@@ -46,15 +54,17 @@ with Image.open(input_path) as image:
     # Resize the image using Lanczos resampling for high-quality downsampling.
     resized_image = image.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
-    # Define the derived output path while preserving the original image filename.
+    # Define the derived output path while preserving the canonical scene filename.
     output_path = output_dir / input_path.name
 
-    # Save the derived JPEG at high quality without modifying the original source image.
+    # Save the derived JPEG at the same frozen high-quality setting used previously.
     resized_image.save(output_path, quality=95)
-
 
 # Print the source image path.
 print(f"Input image: {input_path}")
+
+# Print the benchmark run label.
+print(f"Run label: {run_label}")
 
 # Print the native ground sampling distance used in the calculation.
 print(f"Native GSD: {NATIVE_GSD_CM:.2f} cm/pixel")
