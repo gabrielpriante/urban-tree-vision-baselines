@@ -1,98 +1,89 @@
-<<<<<<< HEAD
-# Import sys so the input image path can be supplied from the command line.
+# Import sys so the script can receive the source image path and optional benchmark run label from the command line.
 import sys
 
-# Import Path so file paths are handled consistently across the repository.
+# Import Path so repository file paths are handled consistently.
 from pathlib import Path
 
-# Import Pillow's Image class so the source JPEG can be read and resized.
+# Import Pillow so the untouched JPEG can be converted and resampled.
 from PIL import Image
 
-# Define the nominal native ground sampling distance of the standardized DJI imagery.
+
+# Define the nominal native ground sampling distance of the standardized DJI imagery in centimeters per pixel.
 NATIVE_GSD_CM = 1.67
 
-# Define the TreeCountSegHeight target ground sampling distance.
+# Define the target ground sampling distance expected by the TreeCountSegHeight deployment condition.
 TARGET_GSD_CM = 20.00
 
-# Read the input image path from the first command-line argument.
+
+# Read the source image path supplied as the first command-line argument.
 input_path = Path(sys.argv[1])
 
-# Stop immediately if the input image does not exist.
+# Read an optional benchmark run label such as "week3".
+run_label = sys.argv[2] if len(sys.argv) > 2 else None
+
+# Stop immediately if the requested source image does not exist.
 if not input_path.exists():
+    # Raise a clear error instead of silently continuing with a missing image.
     raise FileNotFoundError(f"Input image not found: {input_path}")
 
-# Read the experimental condition from the parent directory name.
-condition = input_path.parent.name
+# Derive the before or after experimental condition from the source directory name.
+condition = input_path.parent.name.lower()
 
-# Define the derived output directory for the 20 cm TreeCountSegHeight condition.
-output_dir = Path("data/derived/experiment_001/treecountsegheight_20cm") / condition
+# Define the historical base directory for 20 cm TreeCountSegHeight derived imagery.
+output_root = Path("data/derived/experiment_001/treecountsegheight_20cm")
 
-# Create the output directory and any missing parents.
+# Add the benchmark run label when one is explicitly supplied.
+output_root = output_root / run_label if run_label else output_root
+
+# Define the condition-specific derived-image directory.
+output_dir = output_root / condition
+
+# Create the derived output directory and any missing parent directories.
 output_dir.mkdir(parents=True, exist_ok=True)
 
-# Calculate the linear resize factor needed to preserve physical extent.
+# Calculate the linear scale factor required to move from 1.67 cm per pixel to 20 cm per pixel.
 resize_factor = NATIVE_GSD_CM / TARGET_GSD_CM
 
-# Open the untouched source image.
+# Open the untouched standardized JPEG source image.
 with Image.open(input_path) as image:
-    # Convert the source image to 3-band RGB explicitly.
+    # Explicitly convert the source to three-channel RGB for the RGB-only pretrained model.
     rgb_image = image.convert("RGB")
 
-    # Calculate the target width.
+    # Calculate the target width while preserving the nominal physical footprint.
     target_width = round(rgb_image.width * resize_factor)
 
-    # Calculate the target height.
+    # Calculate the target height while preserving the nominal physical footprint.
     target_height = round(rgb_image.height * resize_factor)
 
-    # Resize using Lanczos for high-quality downsampling.
+    # Downsample the RGB image using deterministic Lanczos resampling.
     resized_image = rgb_image.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
-    # Define the output TIFF path using the same stem as the original image.
+    # Define the TIFF output path while preserving the canonical scene stem.
     output_path = output_dir / f"{input_path.stem}.tif"
 
-    # Save as a 3-band uint8 TIFF.
+    # Save an un-georeferenced three-band RGB TIFF without fabricating spatial metadata.
     resized_image.save(output_path, format="TIFF")
 
-# Print the key provenance and output details.
+# Report the exact standardized source image used.
 print(f"Input image: {input_path}")
+
+# Report the benchmark run label.
+print(f"Run label: {run_label}")
+
+# Report whether the source belongs to the before or after condition.
 print(f"Condition: {condition}")
+
+# Report the nominal source ground sampling distance used in the calculation.
 print(f"Native GSD: {NATIVE_GSD_CM:.2f} cm/pixel")
+
+# Report the fixed TreeCountSegHeight target ground sampling distance.
 print(f"Target GSD: {TARGET_GSD_CM:.2f} cm/pixel")
+
+# Report the exact linear resize factor applied to the source image.
 print(f"Resize factor: {resize_factor:.6f}")
+
+# Report the resulting raster dimensions.
 print(f"Output dimensions: {target_width} x {target_height}")
+
+# Report the path of the derived RGB TIFF.
 print(f"Output image: {output_path}")
-=======
-import sys  # Import sys so the source image path can be supplied from the command line.
-from pathlib import Path  # Import Path so repository file paths are handled consistently.
-from PIL import Image  # Import Pillow so the untouched JPEG can be converted and resampled.
-
-NATIVE_GSD_CM = 1.67  # Define the nominal native ground sampling distance of the standardized DJI imagery in centimeters per pixel.
-TARGET_GSD_CM = 20.00  # Define the target ground sampling distance expected by the TreeCountSegHeight deployment condition.
-
-input_path = Path(sys.argv[1])  # Read the source image path supplied as the first command-line argument.
-
-if not input_path.exists():  # Check that the requested source image actually exists before doing any processing.
-    raise FileNotFoundError(f"Input image not found: {input_path}")  # Stop with a clear error if the source image is missing.
-
-condition = input_path.parent.name  # Derive the before or after experimental condition from the source directory name.
-output_dir = Path("data/derived/experiment_001/treecountsegheight_20cm") / condition  # Define the ignored output directory for the 20 cm derived condition.
-output_dir.mkdir(parents=True, exist_ok=True)  # Create the derived output directory and any missing parent directories.
-
-resize_factor = NATIVE_GSD_CM / TARGET_GSD_CM  # Calculate the linear scale factor required to move from 1.67 cm per pixel to 20 cm per pixel.
-
-with Image.open(input_path) as image:  # Open the untouched standardized JPEG source image.
-    rgb_image = image.convert("RGB")  # Explicitly convert the source to three-channel RGB for the RGB-only pretrained model.
-    target_width = round(rgb_image.width * resize_factor)  # Calculate the target width while preserving the nominal physical footprint.
-    target_height = round(rgb_image.height * resize_factor)  # Calculate the target height while preserving the nominal physical footprint.
-    resized_image = rgb_image.resize((target_width, target_height), Image.Resampling.LANCZOS)  # Downsample the RGB image using deterministic Lanczos resampling.
-    output_path = output_dir / f"{input_path.stem}.tif"  # Define the TIFF output path while preserving the original image stem.
-    resized_image.save(output_path, format="TIFF")  # Save an un-georeferenced three-band RGB TIFF without fabricating spatial metadata.
-
-print(f"Input image: {input_path}")  # Report the exact standardized source image used.
-print(f"Condition: {condition}")  # Report whether the source belongs to the before or after condition.
-print(f"Native GSD: {NATIVE_GSD_CM:.2f} cm/pixel")  # Report the nominal source ground sampling distance used in the calculation.
-print(f"Target GSD: {TARGET_GSD_CM:.2f} cm/pixel")  # Report the fixed TreeCountSegHeight target ground sampling distance.
-print(f"Resize factor: {resize_factor:.6f}")  # Report the exact linear resize factor applied to the source image.
-print(f"Output dimensions: {target_width} x {target_height}")  # Report the resulting raster dimensions.
-print(f"Output image: {output_path}")  # Report the path of the derived RGB TIFF.
->>>>>>> e29e08d227af2186f235752f330d8695d00f5918
