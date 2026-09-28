@@ -17,10 +17,16 @@ SAM2_SOURCE_COMMIT = "2b90b9f5ceec907a1c18123530e92e794ad901a4"  # Record the ex
 parser = argparse.ArgumentParser()  # Create a command-line parser for the frozen B1 experiment.
 parser.add_argument("condition", choices=["before", "after"])  # Require the caller to identify the before or after experimental condition.
 parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require the caller to identify one of the two standardized image stems.
+parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the command-line arguments before loading any research image.
 
-input_path = Path("data/raw/experiment_001") / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched standardized RGB JPEG.
-output_dir = Path("outputs/sam2/experiment_001/b1_automatic") / args.condition / args.image_stem  # Define the ignored B1 output directory for this exact image.
+input_root = Path("data/raw/experiment_001")  # Define the root containing untouched standardized benchmark imagery.
+output_root = Path("outputs/sam2/experiment_001")  # Define the root containing SAM2 benchmark outputs.
+if args.run_label is not None:  # Check whether this inference belongs to a labeled repeated collection period.
+    input_root = input_root / args.run_label  # Route the input to the requested collection period without modifying the source image.
+    output_root = output_root / args.run_label  # Route outputs into the matching collection-period directory.
+input_path = input_root / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched standardized RGB JPEG for the requested collection period.
+output_dir = output_root / "b1_automatic" / args.condition / args.image_stem  # Define the isolated automatic-mask output directory for this exact image.
 output_dir.mkdir(parents=True, exist_ok=True)  # Create the ignored output directory without changing any research inputs.
 output_path = output_dir / f"{args.image_stem}_sam2_automatic_masks.json"  # Define the machine-readable file that will preserve every generated mask.
 
