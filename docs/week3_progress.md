@@ -154,14 +154,69 @@ Inference and visualization are complete for all four Week 3 standardized RGB im
 
 Useful M04 JSON predictions and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M05 DeepForest GSD-Corrected -> SAM2
+
+Inference and visualization are complete for all four Week 3 standardized RGB images.
+
+- Detector source: frozen Week 3 M02 DeepForest GSD-Corrected predictions.
+- DeepForest coordinate space: `1734 x 1300`.
+- SAM2 native RGB coordinate space: `8192 x 6144`.
+- Coordinate scale X: `4.724336793541`.
+- Coordinate scale Y: `4.726153846154`.
+- SAM2 model: SAM 2.1 Hiera Base+.
+- Model config: `configs/sam2.1/sam2.1_hiera_b+.yaml`.
+- Checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`.
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- Each frozen DeepForest XYXY detection box was mapped to native-image coordinates and supplied once to SAM2.
+- `multimask_output=False`.
+- One SAM2 mask was generated for each DeepForest box prompt.
+- No manual box editing was performed.
+- No field truth was used for prompt selection.
+- No post-hoc filtering or parameter tuning was performed.
+- M05 instance quantity is inherited from M02 DeepForest and is **not an independent SAM2 tree count**.
+
+### DeepForest Prompts and SAM2 Masks
+
+| Image | DeepForest Boxes | SAM2 Masks |
+| --- | ---: | ---: |
+| PT_R1 BEFORE | 273 | 273 |
+| PT_R1 AFTER | 319 | 319 |
+| PT_02 BEFORE | 373 | 373 |
+| PT_02 AFTER | 427 | 427 |
+
+### Prediction JSON Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `d2087b8a460e7d503bf096f03799048c5966dd42ce79c03bbce9ae76b330e62e` |
+| PT_R1 AFTER | `17a0bc81494ce4459f882487b646742376b90a9bdb62673f50e48be8e3e730e9` |
+| PT_02 BEFORE | `6bda2032ff62d187f426ae59ff7a5dfb043d0417a1845180a08d9ca3422e1061` |
+| PT_02 AFTER | `e35fad1d3371b9957ee57e57773db1c531a5bdd1d5bb0401466d2731b73c75d7` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | DeepForest boxes | `e2a5bec1bbf16546878332846c7f7f091df29f761d9b6361187ff690d125dac4` |
+| PT_R1 BEFORE | SAM2 overlay | `c3705070131aae5d43f828f3229ba27b3026dfbbeb5428226757865e73c42040` |
+| PT_R1 AFTER | DeepForest boxes | `462b10429b160fc7ffb8a92858ce544aada264ab0b9655712a235bd70744123c` |
+| PT_R1 AFTER | SAM2 overlay | `774890ec15b7565fa8ecb30c528dbc8a114640087fe3509ed1965fb371e9901e` |
+| PT_02 BEFORE | DeepForest boxes | `65ab06c0b95d2b621bae513d7117fbd0a586f91869a3ab47b2d23fafd7e888b9` |
+| PT_02 BEFORE | SAM2 overlay | `4fc2846fba4e79a79caa4609e99fdf59f3670f3cba6221fe01fd89dffa583b33` |
+| PT_02 AFTER | DeepForest boxes | `0cb64363cf59bcc4d74fd8d59a0cf48fe275f630d67fda05c0e8c64ee74ced1d` |
+| PT_02 AFTER | SAM2 overlay | `136a2033fc11515dba9f3bce49db23e0d49b25aeff76ace842d136fcdc562e57` |
+
+Useful M05 JSON predictions and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01, M02, M03, and M04 are complete for Week 3.
+M01, M02, M03, M04, and M05 are complete for Week 3.
 
 Next task:
 
-1. Begin M05 DeepForest GSD-Corrected -> SAM2 on the four Week 3 standardized RGB images.
-2. Reuse the frozen Week 3 M02 DeepForest predictions as the SAM2 box prompts.
-3. Preserve the frozen Week 1 M05 SAM2 box-guided settings.
-4. Treat M05 instance count as inherited from DeepForest, not an independent SAM2 tree count.
-5. Retain all outputs without post-hoc tuning.
+1. Begin Week 4 by freezing and ingesting the four standardized RGB images for PT_R1 and PT_02 BEFORE and AFTER.
+2. Exclude the additional Week 4 PT_R1 orthomosaic from the balanced repeated-imagery benchmark.
+3. Record dimensions and SHA-256 identities before running any model.
+4. Run the same frozen M01 through M05 pipeline used for Week 1 and Week 3.
+5. Preserve outputs without truth-informed tuning or post-hoc parameter adjustment.
