@@ -93,13 +93,75 @@ Preprocessing and inference are complete for all four Week 3 images.
 
 Useful M03 outputs and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M04 SAM2 Automatic
+
+Inference and visualization are complete for all four Week 3 standardized RGB images.
+
+- Model: SAM 2.1 Hiera Base+
+- Model config: `configs/sam2.1/sam2.1_hiera_b+.yaml`
+- Checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`
+- Full-resolution input: `8192 x 6144`
+- `points_per_side=32`
+- `points_per_batch=4`
+- `pred_iou_thresh=0.8`
+- `stability_score_thresh=0.95`
+- `stability_score_offset=1.0`
+- `mask_threshold=0.0`
+- `box_nms_thresh=0.7`
+- `crop_n_layers=0`
+- `crop_nms_thresh=0.7`
+- `crop_overlap_ratio=512/1500`
+- `crop_n_points_downscale_factor=1`
+- `min_mask_region_area=0`
+- `output_mode=uncompressed_rle`
+- `use_m2m=False`
+- `multimask_output=True`
+- Automatic mask count is a segmentation-output quantity and is **not interpreted as tree count**.
+- No tree-specific filtering or post-hoc tuning was performed.
+
+### Automatic Mask Counts
+
+| Image | Automatic Masks |
+| --- | ---: |
+| PT_R1 BEFORE | 106 |
+| PT_R1 AFTER | 102 |
+| PT_02 BEFORE | 86 |
+| PT_02 AFTER | 96 |
+
+### Prediction JSON Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `9cf83ec63694402a1e7cac02d591e22c0660189dc58739eeb2ced2bba3c6ae89` |
+| PT_R1 AFTER | `7a4232a2057aa21de405980d0e8dc5624a880facfb9b6d58bc21333daae4de04` |
+| PT_02 BEFORE | `8ab30531f0a9acdcdc75b08541dc20df96f52ede38217de1415ff071116e791b` |
+| PT_02 AFTER | `dbd4b7c3a881f7270ae779267fdfae65f2e005c49418e5f5528fe6c9cfe964b7` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | boxes and points | `542a20f79eea9a047742c2d42457cecafa236e636b754fecba6945f2e6890caf` |
+| PT_R1 BEFORE | overlay | `1de0ea2a851047247fb20ab9854fe8e27075d03a6a1985f0cedbc560d5d7e78c` |
+| PT_R1 AFTER | boxes and points | `dafd7b8571530146aea4f88b73614b995ba29eff2282522acb816b053ac27ef0` |
+| PT_R1 AFTER | overlay | `8fd650bfca90d965e392cad8d78a518d5f31fab47345b14d64424bc641f58527` |
+| PT_02 BEFORE | boxes and points | `7a105f5b88d1c7efae3d67a51ae62a0325c8b4f453d538bf82484865a0474e9f` |
+| PT_02 BEFORE | overlay | `59eb3fdcba95b59437ec5b4539cd03d9991f22f1e88b06094f995abd23cb09fc` |
+| PT_02 AFTER | boxes and points | `91eb7fb5fa4c16cf9c119edbe147d0cdd63ec217585590d257075175157eb826` |
+| PT_02 AFTER | overlay | `927aad8419a0449f1861b2612b01e90cd414f031dd9406030bf918973a246430` |
+
+Useful M04 JSON predictions and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01, M02, and M03 are complete for Week 3.
+M01, M02, M03, and M04 are complete for Week 3.
 
 Next task:
 
-1. Begin M04 SAM2 Automatic on the four Week 3 standardized RGB images.
-2. Preserve the frozen SAM2 automatic-mask settings established during Week 1.
-3. Treat automatic mask count as segmentation output quantity, not tree count.
-4. Retain all outputs without post-hoc tuning.
+1. Begin M05 DeepForest GSD-Corrected -> SAM2 on the four Week 3 standardized RGB images.
+2. Reuse the frozen Week 3 M02 DeepForest predictions as the SAM2 box prompts.
+3. Preserve the frozen Week 1 M05 SAM2 box-guided settings.
+4. Treat M05 instance count as inherited from DeepForest, not an independent SAM2 tree count.
+5. Retain all outputs without post-hoc tuning.
