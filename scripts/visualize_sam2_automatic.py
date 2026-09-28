@@ -11,10 +11,16 @@ MASK_ALPHA = 90  # Use moderate transparency so the original RGB image remains v
 parser = argparse.ArgumentParser()  # Create the command-line parser for the B1 visualization workflow.
 parser.add_argument("condition", choices=["before", "after"])  # Require the user to specify the experimental condition.
 parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require the user to specify one of the standardized image stems.
+parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the requested visualization target.
 
-input_path = Path("data/raw/experiment_001") / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched standardized RGB image used during B1 inference.
-result_path = Path("outputs/sam2/experiment_001/b1_automatic") / args.condition / args.image_stem / f"{args.image_stem}_sam2_automatic_masks.json"  # Locate the preserved machine-readable B1 output.
+input_root = Path("data/raw/experiment_001")  # Define the root containing standardized benchmark RGB imagery.
+result_root = Path("outputs/sam2/experiment_001")  # Define the root containing SAM2 benchmark outputs.
+if args.run_label is not None:  # Check whether the requested visualization belongs to a labeled repeated collection.
+    input_root = input_root / args.run_label  # Route the RGB input to the requested collection period.
+    result_root = result_root / args.run_label  # Route prediction lookup to the matching collection-period outputs.
+input_path = input_root / args.condition / f"{args.image_stem}.JPG"  # Locate the exact standardized RGB image used during SAM2 inference.
+result_path = result_root / "b1_automatic" / args.condition / args.image_stem / f"{args.image_stem}_sam2_automatic_masks.json"  # Locate the preserved machine-readable automatic-mask output.
 output_dir = result_path.parent  # Reuse the same ignored directory that contains the raw B1 prediction file.
 overlay_path = output_dir / f"{args.image_stem}_sam2_automatic_overlay.png"  # Define the output path for the all-mask segmentation overlay.
 boxes_path = output_dir / f"{args.image_stem}_sam2_automatic_boxes_points.png"  # Define the output path for the mask bounding-box and automatic-point visualization.
