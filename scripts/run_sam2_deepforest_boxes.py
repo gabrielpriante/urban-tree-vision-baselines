@@ -22,6 +22,10 @@ EXPECTED_COUNTS = {("before", "PT_R1"): 293, ("after", "PT_R1"): 302, ("before",
 EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "6714da4af1cf0c099a3addfef1e7fa1bdc30f43668fd010f3e2c3bdb5d8e3a4f", ("after", "PT_R1"): "52055a866e17486a663df1fd746d300c2525a7f5227fa9f8bbafad9f0378bb79", ("before", "PT_02"): "3cfd7506f79fbab319912bbaab23c88a2e7637fbe959b309724023f58f742e34", ("after", "PT_02"): "99f051490499a722782facab412b9d3eac73a28641c93bfc23e7913ec6a3171f"}  # Freeze the previously verified SHA-256 identities of the four untouched native JPEGs.
 EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "4feccc73936ccebc75c424b053d0e2902e7f26f664a5c4c24ea20a7fffa2e565", ("after", "PT_R1"): "8e360c5985e234fc95f61ab519b9a0e99a28d039b46affe3d4bd0b1ede7f9176", ("before", "PT_02"): "3cc55adf73b65578e30b752985e6f14858415c14ccb730d66f4fde095c522f21", ("after", "PT_02"): "b7decb3721a09e8ff80f91a8238ca7f53a6d0037bef9fbd3efbd816d037acb73"}  # Freeze the SHA-256 identities of the four exact 7.89 cm DeepForest input images.
 EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "278d9b064acadd47a60d015ce6b6e98d3df06b2372ec1ba89f37ebb138c4f7a3", ("after", "PT_R1"): "0eaf1dd912d369a45b53d4276836f64f76d4892c7198c04772b9a7c8e0dd6e4c", ("before", "PT_02"): "c8a7505c2d28c49d3b3d9691a00344c1ba431c7cdf8c221646a91e58e4867784", ("after", "PT_02"): "4c78f491546a0241942296123e46c362f2e82e17d0faec26e933cd8a86e7cd4e"}  # Freeze the SHA-256 identities of the four exact DeepForest prediction tables used as B2 prompts.
+WEEK3_EXPECTED_COUNTS = {("before", "PT_R1"): 273, ("after", "PT_R1"): 319, ("before", "PT_02"): 373, ("after", "PT_02"): 427}  # Freeze the verified Week 3 DeepForest box-prompt counts inherited directly from M02.
+WEEK3_EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "6f9b0c5d0f65bc9201153eb7ff4460cf620cbc7842a51df090e633d249bde9c9", ("after", "PT_R1"): "18e0835a58da6a97601bec1db088f8f611f1b26d5e7fdc4b711ba56999e4f393", ("before", "PT_02"): "fbb8a74a05c2e8730fb9bed565b9935ff6256e276fb791ed66660f3f9ee98a98", ("after", "PT_02"): "d93ac2b2d5f76169790fe78563ee08436de237e04b1fb9b1027a3dd19f047aef"}  # Freeze the verified Week 3 native standardized JPEG identities.
+WEEK3_EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "143546831abdca0b8d6a1acd4b65665732dc37a16644a6b42e8660f9cabb4f98", ("after", "PT_R1"): "18ad779cdf7ef36e3125b28e3fd356b4ef235ffcef8f907007b5f699ef1c6c64", ("before", "PT_02"): "4c42688acb21cb724a8b661db94e636fea7b4d5414ee807bb594cefc71ae3b17", ("after", "PT_02"): "3765303bcec2ae9b4f9840d1faf5c1b08cdd58f649d061eae328cf1af816f9bb"}  # Freeze the verified Week 3 7.89 cm DeepForest input-image identities.
+WEEK3_EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "68a26e6ed4ff71c00272fc56d25673aa0d414876310c180ff9a820380564a37d", ("after", "PT_R1"): "c37a5befc46708877a2e9e3992bfaa8da2923ba9e490c391db5735fec746937b", ("before", "PT_02"): "7489266b9fc62ba55ae0bcc66664c1d16eab3f64309e95d5d918ba09865a5aeb", ("after", "PT_02"): "0d5ad474d3779bd52a1dcdaf0132ed85f48c414f1265ed6c000000aad2591d58"}  # Freeze the verified Week 3 M02 prediction-table identities used as M05 prompts.
 def sha256_file(path):  # Define a small helper that calculates the SHA-256 identity of one input artifact.
     digest = hashlib.sha256()  # Create a fresh SHA-256 calculator for this file.
     with path.open("rb") as input_file:  # Open the file in binary mode without modifying it.
@@ -31,20 +35,36 @@ def sha256_file(path):  # Define a small helper that calculates the SHA-256 iden
 parser = argparse.ArgumentParser()  # Create the command-line parser for the frozen B2 experiment.
 parser.add_argument("condition", choices=["before", "after"])  # Require the caller to identify the before or after experimental condition.
 parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require the caller to identify one of the two standardized scene images.
+parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional repeated-collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the requested B2 image before loading any research artifact.
 key = (args.condition, args.image_stem)  # Create the condition-image key used by the frozen provenance dictionaries.
-native_path = Path("data/raw/experiment_001") / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched 8192 by 6144 RGB image that SAM 2 will segment.
-deepforest_image_path = Path("data/derived/experiment_001/gsd_7.89") / args.condition / f"{args.image_stem}.JPG"  # Locate the exact 1734 by 1300 image used to generate the frozen DeepForest boxes.
-deepforest_csv_path = Path("outputs/experiment_001/deepforest/gsd_7.89") / args.condition / f"{args.image_stem}_predictions.csv"  # Locate the exact frozen DeepForest prediction table used as the B2 prompt source.
-output_dir = Path("outputs/sam2/experiment_001/b2_deepforest_boxes") / args.condition / args.image_stem  # Define the ignored output directory for this B2 image.
+if args.run_label not in (None, "week3"):  # Restrict this committed version to the original Week 1 data or the now-frozen Week 3 collection only.
+    raise SystemExit(f"Unsupported run label: {args.run_label}")  # Stop rather than silently using incorrect provenance for an unconfigured collection period.
+expected_counts = WEEK3_EXPECTED_COUNTS if args.run_label == "week3" else EXPECTED_COUNTS  # Select the correct frozen DeepForest prompt counts for the requested collection period.
+expected_native_sha256 = WEEK3_EXPECTED_NATIVE_SHA256 if args.run_label == "week3" else EXPECTED_NATIVE_SHA256  # Select the correct native-image provenance dictionary.
+expected_deepforest_image_sha256 = WEEK3_EXPECTED_DEEPFOREST_IMAGE_SHA256 if args.run_label == "week3" else EXPECTED_DEEPFOREST_IMAGE_SHA256  # Select the correct corrected-GSD image provenance dictionary.
+expected_deepforest_csv_sha256 = WEEK3_EXPECTED_DEEPFOREST_CSV_SHA256 if args.run_label == "week3" else EXPECTED_DEEPFOREST_CSV_SHA256  # Select the correct frozen DeepForest CSV provenance dictionary.
+native_root = Path("data/raw/experiment_001")  # Define the root containing untouched standardized RGB benchmark images.
+deepforest_image_root = Path("data/derived/experiment_001/gsd_7.89")  # Define the root containing frozen 7.89 cm DeepForest input images.
+deepforest_csv_root = Path("outputs/experiment_001/deepforest/gsd_7.89")  # Define the root containing frozen M02 DeepForest prediction tables.
+output_root = Path("outputs/sam2/experiment_001")  # Define the root containing SAM2 benchmark outputs.
+if args.run_label == "week3":  # Route all three frozen inputs and the M05 output directory to Week 3 when explicitly requested.
+    native_root = native_root / "week3"  # Route the untouched SAM2 RGB input to the Week 3 standardized image collection.
+    deepforest_image_root = deepforest_image_root / "week3"  # Route the corrected-GSD coordinate-space image to its Week 3 artifact.
+    deepforest_csv_root = deepforest_csv_root / "week3"  # Route the DeepForest prompt table to the frozen Week 3 M02 output.
+    output_root = output_root / "week3"  # Isolate Week 3 M05 outputs from the original Week 1 benchmark outputs.
+native_path = native_root / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched 8192 by 6144 RGB image that SAM2 will segment.
+deepforest_image_path = deepforest_image_root / args.condition / f"{args.image_stem}.JPG"  # Locate the exact 1734 by 1300 image defining the DeepForest box coordinate space.
+deepforest_csv_path = deepforest_csv_root / args.condition / f"{args.image_stem}_predictions.csv"  # Locate the exact frozen DeepForest M02 prediction table used as the M05 prompt source.
+output_dir = output_root / "b2_deepforest_boxes" / args.condition / args.image_stem  # Define the isolated output directory for this exact M05 run.
 output_dir.mkdir(parents=True, exist_ok=True)  # Create the ignored B2 output directory without modifying any input artifact.
 output_path = output_dir / f"{args.image_stem}_sam2_deepforest_box_masks.json"  # Define the machine-readable file that will preserve every DeepForest-guided SAM 2 mask.
 native_sha256 = sha256_file(native_path)  # Calculate the SHA-256 identity of the untouched native RGB image supplied to SAM 2.
 deepforest_image_sha256 = sha256_file(deepforest_image_path)  # Calculate the SHA-256 identity of the exact 7.89 cm image used by DeepForest.
 deepforest_csv_sha256 = sha256_file(deepforest_csv_path)  # Calculate the SHA-256 identity of the exact frozen DeepForest prediction table.
-assert native_sha256 == EXPECTED_NATIVE_SHA256[key], f"Native image SHA-256 mismatch: {native_sha256}"  # Stop immediately if the native image differs from the previously frozen research input.
-assert deepforest_image_sha256 == EXPECTED_DEEPFOREST_IMAGE_SHA256[key], f"DeepForest image SHA-256 mismatch: {deepforest_image_sha256}"  # Stop immediately if the 7.89 cm DeepForest source image differs from the frozen artifact.
-assert deepforest_csv_sha256 == EXPECTED_DEEPFOREST_CSV_SHA256[key], f"DeepForest CSV SHA-256 mismatch: {deepforest_csv_sha256}"  # Stop immediately if the DeepForest prompt table differs from the frozen Phase A output.
+assert native_sha256 == expected_native_sha256[key], f"Native image SHA-256 mismatch: {native_sha256}"  # Stop immediately if the native image differs from the previously frozen research input.
+assert deepforest_image_sha256 == expected_deepforest_image_sha256[key], f"DeepForest image SHA-256 mismatch: {deepforest_image_sha256}"  # Stop immediately if the 7.89 cm DeepForest source image differs from the frozen artifact.
+assert deepforest_csv_sha256 == expected_deepforest_csv_sha256[key], f"DeepForest CSV SHA-256 mismatch: {deepforest_csv_sha256}"  # Stop immediately if the DeepForest prompt table differs from the frozen Phase A output.
 with Image.open(deepforest_image_path) as deepforest_source_image:  # Open the 7.89 cm image only to verify the coordinate-space dimensions used by the frozen detector.
     assert deepforest_source_image.size == (DEEPFOREST_WIDTH, DEEPFOREST_HEIGHT), f"Unexpected DeepForest image size: {deepforest_source_image.size}"  # Stop if the actual DeepForest coordinate space differs from the verified 1734 by 1300 dimensions.
 with native_path.open("rb"):  # Confirm that the untouched native image path is readable before loading the model.
@@ -54,7 +74,7 @@ with Image.open(native_path) as native_source_image:  # Open the untouched stand
     image = np.array(native_source_image.convert("RGB"))  # Convert the untouched image into the HWC uint8 RGB array expected by Meta's SAM 2 predictor.
 with deepforest_csv_path.open("r", encoding="utf-8", newline="") as csv_file:  # Open the frozen DeepForest prediction table without modifying it.
     deepforest_rows = list(csv.DictReader(csv_file))  # Read every frozen DeepForest detection in its original table order.
-assert len(deepforest_rows) == EXPECTED_COUNTS[key], f"Unexpected DeepForest detection count: {len(deepforest_rows)}"  # Stop if the number of box prompts differs from the count verified before B2 was written.
+assert len(deepforest_rows) == expected_counts[key], f"Unexpected DeepForest detection count: {len(deepforest_rows)}"  # Stop if the number of box prompts differs from the count verified before B2 was written.
 scale_x = NATIVE_WIDTH / DEEPFOREST_WIDTH  # Calculate the exact horizontal mapping from the 1734-pixel DeepForest coordinate space to the 8192-pixel native image.
 scale_y = NATIVE_HEIGHT / DEEPFOREST_HEIGHT  # Calculate the exact vertical mapping from the 1300-pixel DeepForest coordinate space to the 6144-pixel native image.
 model = build_sam2(MODEL_CONFIG, CHECKPOINT_PATH, device="cuda", apply_postprocessing=False)  # Build the same pinned SAM 2.1 Base+ model without extra postprocessing.
