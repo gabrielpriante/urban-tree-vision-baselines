@@ -9,9 +9,15 @@ MASK_ALPHA = 85  # Use moderate mask transparency so the underlying aerial image
 parser = argparse.ArgumentParser()  # Create the command-line parser for the B2 visualization workflow.
 parser.add_argument("condition", choices=["before", "after"])  # Require the before or after experimental condition.
 parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require one of the two standardized image identifiers.
+parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the requested B2 visualization target.
-input_path = Path("data/raw/experiment_001") / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched native RGB image used by SAM 2.
-result_path = Path("outputs/sam2/experiment_001/b2_deepforest_boxes") / args.condition / args.image_stem / f"{args.image_stem}_sam2_deepforest_box_masks.json"  # Locate the preserved B2 prediction record.
+input_root = Path("data/raw/experiment_001")  # Define the root containing untouched standardized RGB benchmark images.
+result_root = Path("outputs/sam2/experiment_001")  # Define the root containing DeepForest-guided SAM2 outputs.
+if args.run_label is not None:  # Check whether the visualization belongs to a labeled repeated collection such as Week 3.
+    input_root = input_root / args.run_label  # Route the native RGB image to the requested collection period.
+    result_root = result_root / args.run_label  # Route the preserved M05 prediction JSON to the requested collection period.
+input_path = input_root / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched native RGB image used by SAM2.
+result_path = result_root / "b2_deepforest_boxes" / args.condition / args.image_stem / f"{args.image_stem}_sam2_deepforest_box_masks.json"  # Locate the preserved M05 prediction record.
 output_dir = result_path.parent  # Use the same ignored output directory that already stores the raw B2 JSON.
 overlay_path = output_dir / f"{args.image_stem}_sam2_deepforest_overlay.png"  # Define the visualization containing SAM 2 masks plus their DeepForest prompt boxes.
 boxes_path = output_dir / f"{args.image_stem}_deepforest_boxes_native.png"  # Define a separate visualization containing only the mapped DeepForest boxes.
