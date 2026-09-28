@@ -29,13 +29,21 @@ Target deployment GSD: `7.89 cm/pixel`.
 
 ## M03 TreeCountSegHeight
 
-Preprocessing is complete for all four Week 3 images.
+Preprocessing and inference are complete for all four Week 3 images.
 
 - Native GSD assumption: `1.67 cm/pixel`
 - Target GSD: `20.00 cm/pixel`
 - Output dimensions: `684 x 513`
 - Resampling: Lanczos
 - Format: three-band RGB TIFF
+- Docker image: `sizhuoli/tree_expert@sha256:fab4a8e16d7bc085440724c9fa522c957dc04299c625fcab7617b87c1c154e13`
+- Model checkpoint: `trees_20210620-0202_Adam_e4_redgreenblue_256_84_frames_weightmapTversky_MSE100_5weight_attUNet.h5`
+- Checkpoint SHA-256: `abce53345b8159aeda49dce7db32a0806ee90970593e7d2a1fe88d1f133ac843`
+- Count interpretation: continuous sum of the model density raster
+- Counts remain fractional and are not rounded
+- These are density-estimated counts, not independently localized tree instances
+
+### Derived Inputs
 
 | Image | Derived TIFF SHA-256 |
 | --- | --- |
@@ -44,17 +52,54 @@ Preprocessing is complete for all four Week 3 images.
 | PT_02 BEFORE | `fade86a8e5f95e1f6f6712faf0ae2a96fa68f23dd92a9c586e896141558764e7` |
 | PT_02 AFTER | `4edc99267737a0a1a95b19aa85723398a6b67e97824ad856769c1962ad2a975e` |
 
+### Continuous Predicted Counts
+
+| Image | Density-Sum Count |
+| --- | ---: |
+| PT_R1 BEFORE | `2.7866833359` |
+| PT_R1 AFTER | `4.6561581232` |
+| PT_02 BEFORE | `0.3150038328` |
+| PT_02 AFTER | `3.4307784382` |
+
+### Raw Prediction TIFF Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `bafe61eb22b91af8944771c8310e9937ff17bfaa0d71945ea0d99f3a377d6195` |
+| PT_R1 BEFORE | segmentation | `3be9dc553c87ee4324142ba6eea31ed27a1cb974554d55f52515d78ad66a5cfd` |
+| PT_R1 AFTER | density | `09082df97f4a87f75c854230a1c2a228cd4ee1d6838b409ad2d6de9732c02a51` |
+| PT_R1 AFTER | segmentation | `f765c4f2cf4136c25fb3bc4586406d71de1391d243ed918b3cdc7c9a0af2ddbf` |
+| PT_02 BEFORE | density | `0518c9aabffc61d8937f742476c342e12e243c0769acba596cd0b6c494bcbf41` |
+| PT_02 BEFORE | segmentation | `95f2ef9259d1b8d8dba61c6937ea4b940fc4a142c573001876100014dd9b40fe` |
+| PT_02 AFTER | density | `b2c01577ffd883597718022fe973b03020726ab8c2683eae780634b175d3ab75` |
+| PT_02 AFTER | segmentation | `58aa52a30f19d5233db92826ffca7fb8c1c8ce5a9771bde6d7c1c9e5b8e1d49a` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `a518ee5b71cedf069df178714deeaf2909576441a51530055a78b098760ec068` |
+| PT_R1 BEFORE | overlay | `4b16afdad50afbce0c5bb7a603478b6617ff6d58f91fd269c71f2a940ed02db1` |
+| PT_R1 BEFORE | segmentation | `390887671600a74b32af8b963dd1b06841bc1b63bb645c061359ace77019d68a` |
+| PT_R1 AFTER | density | `49896ba254c4b0f817ed3c6692d450388519ec53d435a625c5a9d2f182046031` |
+| PT_R1 AFTER | overlay | `b4bddb08fd3b0dd4be23f90364fe2688ef90caf43771085c53415c85ad5a6605` |
+| PT_R1 AFTER | segmentation | `855ca9e70c2b90529e32d720b37ddc006fa3197befa8e06ed9e7d8fbcaaf47b0` |
+| PT_02 BEFORE | density | `32f681625cc7b523ca3ee69da7858386c48645b0af7504df9f1c13a3c2977550` |
+| PT_02 BEFORE | overlay | `a32654f1c183681196afb126efd6c67740aeefd029cd327147c1b6a193030bb6` |
+| PT_02 BEFORE | segmentation | `37fbe0f9a88df44fd2e66b62e85fe095de6bf3207f87747e174fd7989f2f60ba` |
+| PT_02 AFTER | density | `4761b043b52917b9ed2f2912e831da1e2734804ddf34ed5f9d46c72a48bc667a` |
+| PT_02 AFTER | overlay | `c052efd687a1bb41f65a9c7bea697cc53cf257010e44d01fe97462e004360f04` |
+| PT_02 AFTER | segmentation | `91b38c4b6d80c2f8d037701ab14c5f664be75c8c443a41fff606d2d503ca29e5` |
+
+Useful M03 outputs and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M03 model inference has **not** started.
+M01, M02, and M03 are complete for Week 3.
 
 Next task:
 
-1. Verify Docker is available.
-2. Verify the local official TreeCountSegHeight image.
-3. Confirm its digest matches the previously frozen artifact:
-   `sha256:fab4a8e16d7bc085440724c9fa522c957dc04299c625fcab7617b87c1c154e13`
-4. Inspect `configs/treecountsegheight/hyperps_rgb.yaml`.
-5. Run the four Week 3 TreeCountSegHeight Docker inference jobs without modifying the frozen configuration.
-
-No Week 3 TreeCountSegHeight model outputs currently exist.
+1. Begin M04 SAM2 Automatic on the four Week 3 standardized RGB images.
+2. Preserve the frozen SAM2 automatic-mask settings established during Week 1.
+3. Treat automatic mask count as segmentation output quantity, not tree count.
+4. Retain all outputs without post-hoc tuning.
