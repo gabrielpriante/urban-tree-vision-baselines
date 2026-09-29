@@ -45,17 +45,21 @@
 
 ## M03 TreeCountSegHeight
 
-- Preprocessing: complete.
-- Docker inference: complete for all four images.
-- Postprocessing, output hashing, visualization, and density-sum counts: not yet completed.
+- Status: complete.
 - Native GSD assumption: 1.67 cm/pixel.
 - Target GSD: 20.00 cm/pixel.
+- Resize factor: 0.083500.
 - Derived dimensions: 684 x 513 RGB TIFF.
+- Resampling: Lanczos.
 - Docker image: `sizhuoli/tree_expert@sha256:fab4a8e16d7bc085440724c9fa522c957dc04299c625fcab7617b87c1c154e13`.
-- RGB checkpoint SHA-256: `abce53345b8159aeda49dce7db32a0806ee90970593e7d2a1fe88d1f133ac843`.
-- All four runs ended with `Predicted 1 images.` and `Failed to predict 0 images.`.
+- Model checkpoint: `trees_20210620-0202_Adam_e4_redgreenblue_256_84_frames_weightmapTversky_MSE100_5weight_attUNet.h5`.
+- Checkpoint SHA-256: `abce53345b8159aeda49dce7db32a0806ee90970593e7d2a1fe88d1f133ac843`.
+- Count interpretation: continuous sum of the predicted density raster.
+- Counts remain fractional and are not rounded.
+- These values are density-estimated counts, not independently localized tree instances.
+- All four Docker runs completed with `Predicted 1 images.` and `Failed to predict 0 images.`.
 
-### M03 Derived Input Hashes
+### Derived Input Hashes
 
 | Image | SHA-256 |
 | --- | --- |
@@ -64,13 +68,55 @@
 | PT_02 BEFORE | `60567c4ae4b5ae4a11585841e3122911078d0a6e78424050b955d1874deae816` |
 | PT_02 AFTER | `81e2b3a2e4da290638035d2981254b933c0577de20b72ed2c1d18ba1c1033670` |
 
+### Continuous Predicted Counts
+
+| Image | Density-Sum Count |
+| --- | ---: |
+| PT_R1 BEFORE | `6.9141701255` |
+| PT_R1 AFTER | `10.2336220462` |
+| PT_02 BEFORE | `12.5232079662` |
+| PT_02 AFTER | `8.3929474838` |
+
+### Raw Prediction TIFF Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `95e1ee98478e8dfbed3f27c5887738c43c36bd725fab2328fd51b0f1873c0ab6` |
+| PT_R1 BEFORE | segmentation | `86a3b50329fca8d880e871d83d274e40576b25ffb362ab5e478ef53da5fe2dde` |
+| PT_R1 AFTER | density | `aae9194023a9b839ca1e1e6d43cf6da0ac95912c87bda909fb458c12f61ac947` |
+| PT_R1 AFTER | segmentation | `63f4d985c034d91d8e2f160d8c08ddc5897936fb6f00b4c21855a41a8fc85ceb` |
+| PT_02 BEFORE | density | `11b5c329a131969c44be7545df416965bc0598113d5850b439d8cdded3f6fd51` |
+| PT_02 BEFORE | segmentation | `d80208706392b8a16866746182ee3a09ae155698edb3ce15a0828f4c20f99a35` |
+| PT_02 AFTER | density | `e588f7f530970e2424911a6bd33d58f72917ff438bacf936353ec1bfce982c03` |
+| PT_02 AFTER | segmentation | `d730502861a2dc40fa993b9dd4897508c19141f5443dcf868be7f27a7f9920c3` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `89fcdb0f2bb66a5e77fa7d1bcd5f720827cb979a269ed540c12d6e8af43e570d` |
+| PT_R1 BEFORE | overlay | `8b71cbec740fb5c87c38a1f0ed036001d47402d76a258690d02701ca4e3b9b0b` |
+| PT_R1 BEFORE | segmentation | `9cefea1eb1c23a82151bc37d22485d152fd54a8d0f3a301ef69d1d63054b585b` |
+| PT_R1 AFTER | density | `7cfe31865e7e432d243786d2e6e80612b9394377b24d0737223736d918a6fb33` |
+| PT_R1 AFTER | overlay | `3c47693b49f872f56091b6bfa61bfd6ad032712f9c460586a9622eb2acbf09e4` |
+| PT_R1 AFTER | segmentation | `02622fec5cf71097797763454a056427f345a128911d791048ce05125115394a` |
+| PT_02 BEFORE | density | `9f0432fad8fd91c8368a8e641fda3323e51a7ca14c7e614c5bba37ecd3caff96` |
+| PT_02 BEFORE | overlay | `e8c45292a156680efbf605d938e69837f66461793412b7058140786abfceac6d` |
+| PT_02 BEFORE | segmentation | `1728e906201cc371e8c6e32269d7303bc167216ab0f6087ba298bfad79238e40` |
+| PT_02 AFTER | density | `4b9af3465829deffe81d369cb930cdbc6dffe6e76d77a999f6e798eb4fece9a4` |
+| PT_02 AFTER | overlay | `054a7bd48e16d1f724f0a555448447997d6e6a6b23b4fbd70160d9d0bc748d1f` |
+| PT_02 AFTER | segmentation | `c5104e4821fdd68a81993c61ea07530085f19734738e1bac6f1128b3d070f72b` |
+
+Useful M03 derived inputs, raw predictions, and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-1. Do not rerun M01, M02, or M03 Docker inference.
-2. Inspect the four existing Week 4 M03 output directories and identify the density and segmentation TIFF filenames.
-3. Calculate continuous density-sum counts using the same Week 3 method and preserve fractional precision.
-4. Hash all eight raw M03 TIFF outputs.
-5. Run the existing TreeCountSegHeight visualization script with the Week 4 run label and generate density, overlay, and segmentation PNGs.
-6. Hash all twelve visualization PNGs and mirror final M03 artifacts to Windows.
-7. Then begin M04 SAM2 Automatic Week 4.
-8. M05 will reuse the frozen M02 prompt counts 350, 365, 450, and 478.
+M01, M02, and M03 are complete for Week 4.
+
+Next task:
+
+1. Begin Week 4 M04 SAM2 Automatic using the identical frozen SAM2 configuration used for Week 3.
+2. Do not reinterpret automatic mask quantity as tree count.
+3. Preserve all raw JSON predictions and visualization artifacts.
+4. Do not perform tree-specific filtering or truth-informed tuning.
+5. After M04 is frozen and mirrored, complete Week 4 M05 using the already-frozen M02 DeepForest boxes.
