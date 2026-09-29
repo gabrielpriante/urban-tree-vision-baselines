@@ -26,6 +26,10 @@ WEEK3_EXPECTED_COUNTS = {("before", "PT_R1"): 273, ("after", "PT_R1"): 319, ("be
 WEEK3_EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "6f9b0c5d0f65bc9201153eb7ff4460cf620cbc7842a51df090e633d249bde9c9", ("after", "PT_R1"): "18e0835a58da6a97601bec1db088f8f611f1b26d5e7fdc4b711ba56999e4f393", ("before", "PT_02"): "fbb8a74a05c2e8730fb9bed565b9935ff6256e276fb791ed66660f3f9ee98a98", ("after", "PT_02"): "d93ac2b2d5f76169790fe78563ee08436de237e04b1fb9b1027a3dd19f047aef"}  # Freeze the verified Week 3 native standardized JPEG identities.
 WEEK3_EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "143546831abdca0b8d6a1acd4b65665732dc37a16644a6b42e8660f9cabb4f98", ("after", "PT_R1"): "18ad779cdf7ef36e3125b28e3fd356b4ef235ffcef8f907007b5f699ef1c6c64", ("before", "PT_02"): "4c42688acb21cb724a8b661db94e636fea7b4d5414ee807bb594cefc71ae3b17", ("after", "PT_02"): "3765303bcec2ae9b4f9840d1faf5c1b08cdd58f649d061eae328cf1af816f9bb"}  # Freeze the verified Week 3 7.89 cm DeepForest input-image identities.
 WEEK3_EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "68a26e6ed4ff71c00272fc56d25673aa0d414876310c180ff9a820380564a37d", ("after", "PT_R1"): "c37a5befc46708877a2e9e3992bfaa8da2923ba9e490c391db5735fec746937b", ("before", "PT_02"): "7489266b9fc62ba55ae0bcc66664c1d16eab3f64309e95d5d918ba09865a5aeb", ("after", "PT_02"): "0d5ad474d3779bd52a1dcdaf0132ed85f48c414f1265ed6c000000aad2591d58"}  # Freeze the verified Week 3 M02 prediction-table identities used as M05 prompts.
+WEEK4_EXPECTED_COUNTS = {("before", "PT_R1"): 350, ("after", "PT_R1"): 365, ("before", "PT_02"): 450, ("after", "PT_02"): 478}  # Freeze the verified Week 4 DeepForest box-prompt counts inherited directly from M02.
+WEEK4_EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "5765eb41ab89c9427141ab27e0e6cfd4feb53e4798ea7af68bf4824a8c7be273", ("after", "PT_R1"): "4fc3d22c3cd837e22828edf13b7556f6fe0def37403b7e950354eab8b0702fdf", ("before", "PT_02"): "75358d8e3144029cee679b2996575d785cb1acb1aa5ab148b9ad5eaf62848429", ("after", "PT_02"): "0cebef67412b933da8c13e66aa75b7a020c957e7403306859f804cf927c12549"}  # Freeze the verified Week 4 native standardized JPEG identities.
+WEEK4_EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "d774206227add179b1a18f12a4ad5ddb7a1fbbc1b7d7d4db86bfeec7d0e821ee", ("after", "PT_R1"): "0ad4f6b3c4dad1e1280229c9d83936fb6be68338f2f445043be1602bc83fc277", ("before", "PT_02"): "f97bfe06c820d692dd0f2df5651c9f7fcad08b7997263c062cd4b0ba6005f9db", ("after", "PT_02"): "c7e98c8a49871aab7de61fda5ab17d9d4fa9b667c94b89f2b753f23921113c04"}  # Freeze the verified Week 4 7.89 cm DeepForest input-image identities.
+WEEK4_EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "b79514ce8b493472ce6715edd632bf8bf94bf59f533feb6dfae55641410b0400", ("after", "PT_R1"): "1f2d33ccd21088ea7cf48c7bc312a1ebc9f33649037ef43102e3cc69e2bd6096", ("before", "PT_02"): "65ff4c615f16ec62832197d4bddfcacadb558f9060c36856d03f8844f26ea897", ("after", "PT_02"): "ba4144199e0d46f4079c64a0ed1930f825d1d4cc768cd1dc09d46b86e5ff0c8a"}  # Freeze the verified Week 4 M02 prediction-table identities used as M05 prompts.
 def sha256_file(path):  # Define a small helper that calculates the SHA-256 identity of one input artifact.
     digest = hashlib.sha256()  # Create a fresh SHA-256 calculator for this file.
     with path.open("rb") as input_file:  # Open the file in binary mode without modifying it.
@@ -38,21 +42,32 @@ parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require the cal
 parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional repeated-collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the requested B2 image before loading any research artifact.
 key = (args.condition, args.image_stem)  # Create the condition-image key used by the frozen provenance dictionaries.
-if args.run_label not in (None, "week3"):  # Restrict this committed version to the original Week 1 data or the now-frozen Week 3 collection only.
-    raise SystemExit(f"Unsupported run label: {args.run_label}")  # Stop rather than silently using incorrect provenance for an unconfigured collection period.
-expected_counts = WEEK3_EXPECTED_COUNTS if args.run_label == "week3" else EXPECTED_COUNTS  # Select the correct frozen DeepForest prompt counts for the requested collection period.
-expected_native_sha256 = WEEK3_EXPECTED_NATIVE_SHA256 if args.run_label == "week3" else EXPECTED_NATIVE_SHA256  # Select the correct native-image provenance dictionary.
-expected_deepforest_image_sha256 = WEEK3_EXPECTED_DEEPFOREST_IMAGE_SHA256 if args.run_label == "week3" else EXPECTED_DEEPFOREST_IMAGE_SHA256  # Select the correct corrected-GSD image provenance dictionary.
-expected_deepforest_csv_sha256 = WEEK3_EXPECTED_DEEPFOREST_CSV_SHA256 if args.run_label == "week3" else EXPECTED_DEEPFOREST_CSV_SHA256  # Select the correct frozen DeepForest CSV provenance dictionary.
+if args.run_label not in (None, "week3", "week4"):  # Restrict M05 to collection periods whose provenance has been explicitly frozen in this script.
+    raise SystemExit(f"Unsupported run label: {args.run_label}")  # Stop rather than silently using provenance from the wrong collection period.
+if args.run_label == "week3":  # Select the already-frozen Week 3 provenance when Week 3 is explicitly requested.
+    expected_counts = WEEK3_EXPECTED_COUNTS  # Use the frozen Week 3 DeepForest prompt counts.
+    expected_native_sha256 = WEEK3_EXPECTED_NATIVE_SHA256  # Use the frozen Week 3 native-image identities.
+    expected_deepforest_image_sha256 = WEEK3_EXPECTED_DEEPFOREST_IMAGE_SHA256  # Use the frozen Week 3 corrected-GSD image identities.
+    expected_deepforest_csv_sha256 = WEEK3_EXPECTED_DEEPFOREST_CSV_SHA256  # Use the frozen Week 3 M02 prediction-table identities.
+elif args.run_label == "week4":  # Select the newly frozen Week 4 provenance when Week 4 is explicitly requested.
+    expected_counts = WEEK4_EXPECTED_COUNTS  # Use the frozen Week 4 DeepForest prompt counts.
+    expected_native_sha256 = WEEK4_EXPECTED_NATIVE_SHA256  # Use the frozen Week 4 native-image identities.
+    expected_deepforest_image_sha256 = WEEK4_EXPECTED_DEEPFOREST_IMAGE_SHA256  # Use the frozen Week 4 corrected-GSD image identities.
+    expected_deepforest_csv_sha256 = WEEK4_EXPECTED_DEEPFOREST_CSV_SHA256  # Use the frozen Week 4 M02 prediction-table identities.
+else:  # Preserve the original unlabeled Week 1 benchmark behavior.
+    expected_counts = EXPECTED_COUNTS  # Use the original Week 1 DeepForest prompt counts.
+    expected_native_sha256 = EXPECTED_NATIVE_SHA256  # Use the original Week 1 native-image identities.
+    expected_deepforest_image_sha256 = EXPECTED_DEEPFOREST_IMAGE_SHA256  # Use the original Week 1 corrected-GSD image identities.
+    expected_deepforest_csv_sha256 = EXPECTED_DEEPFOREST_CSV_SHA256  # Use the original Week 1 M02 prediction-table identities.
 native_root = Path("data/raw/experiment_001")  # Define the root containing untouched standardized RGB benchmark images.
 deepforest_image_root = Path("data/derived/experiment_001/gsd_7.89")  # Define the root containing frozen 7.89 cm DeepForest input images.
 deepforest_csv_root = Path("outputs/experiment_001/deepforest/gsd_7.89")  # Define the root containing frozen M02 DeepForest prediction tables.
 output_root = Path("outputs/sam2/experiment_001")  # Define the root containing SAM2 benchmark outputs.
-if args.run_label == "week3":  # Route all three frozen inputs and the M05 output directory to Week 3 when explicitly requested.
-    native_root = native_root / "week3"  # Route the untouched SAM2 RGB input to the Week 3 standardized image collection.
-    deepforest_image_root = deepforest_image_root / "week3"  # Route the corrected-GSD coordinate-space image to its Week 3 artifact.
-    deepforest_csv_root = deepforest_csv_root / "week3"  # Route the DeepForest prompt table to the frozen Week 3 M02 output.
-    output_root = output_root / "week3"  # Isolate Week 3 M05 outputs from the original Week 1 benchmark outputs.
+if args.run_label is not None:  # Route repeated collections into their matching run-label directories while preserving unlabeled Week 1 behavior.
+    native_root = native_root / args.run_label  # Route the untouched SAM2 RGB input to the requested collection period.
+    deepforest_image_root = deepforest_image_root / args.run_label  # Route the corrected-GSD DeepForest image to the requested collection period.
+    deepforest_csv_root = deepforest_csv_root / args.run_label  # Route the frozen M02 prompt table to the requested collection period.
+    output_root = output_root / args.run_label  # Isolate M05 outputs inside the requested collection-period namespace.
 native_path = native_root / args.condition / f"{args.image_stem}.JPG"  # Locate the untouched 8192 by 6144 RGB image that SAM2 will segment.
 deepforest_image_path = deepforest_image_root / args.condition / f"{args.image_stem}.JPG"  # Locate the exact 1734 by 1300 image defining the DeepForest box coordinate space.
 deepforest_csv_path = deepforest_csv_root / args.condition / f"{args.image_stem}_predictions.csv"  # Locate the exact frozen DeepForest M02 prediction table used as the M05 prompt source.
