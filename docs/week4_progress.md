@@ -109,14 +109,75 @@
 
 Useful M03 derived inputs, raw predictions, and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M04 SAM2 Automatic
+
+- Status: complete.
+- Model: SAM 2.1 Hiera Base+.
+- Model config: `configs/sam2.1/sam2.1_hiera_b+.yaml`.
+- Checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`.
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- Full-resolution inputs: 8192 x 6144 RGB.
+- `points_per_side=32`.
+- `points_per_batch=4`.
+- `pred_iou_thresh=0.8`.
+- `stability_score_thresh=0.95`.
+- `stability_score_offset=1.0`.
+- `mask_threshold=0.0`.
+- `box_nms_thresh=0.7`.
+- `crop_n_layers=0`.
+- `crop_nms_thresh=0.7`.
+- `crop_overlap_ratio=512/1500`.
+- `crop_n_points_downscale_factor=1`.
+- `min_mask_region_area=0`.
+- `output_mode=uncompressed_rle`.
+- `use_m2m=False`.
+- `multimask_output=True`.
+- Automatic mask quantity is not interpreted as tree count.
+- No tree-specific filtering or truth-informed tuning was performed.
+
+### Automatic Mask Counts
+
+| Image | Automatic Masks |
+| --- | ---: |
+| PT_R1 BEFORE | 87 |
+| PT_R1 AFTER | 76 |
+| PT_02 BEFORE | 74 |
+| PT_02 AFTER | 50 |
+
+### Prediction JSON Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `cd45ea28b37fa6e0c9752526b8cc4f8cc6defd7afe1cec8434ac80aa487f5860` |
+| PT_R1 AFTER | `c16d1eb8b8a615667776e3175d17fd6dc1f612f32d435e09bb1f9e14e263e94f` |
+| PT_02 BEFORE | `5e1a14e29223aeaee3a485a0f94a7d9cbf0f5f8c750a1a90aa8c8aa28ca316ae` |
+| PT_02 AFTER | `66133c54e7c5b909a013773189512ea96877fe8a8c4c48d4f37fdbcc6fb23957` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | boxes and points | `23748982a32f1692089e850c8eba3878378893216ffaa2d5e68a1860319e5813` |
+| PT_R1 BEFORE | overlay | `3d985e94b992819bc456ee4c1c9585e485d9b1d5f894a5fffbc5ebae6cc9b1c8` |
+| PT_R1 AFTER | boxes and points | `868021811b875cb68a39409ac8300c755a849b85be64b0f8e9d421db2927e5f6` |
+| PT_R1 AFTER | overlay | `bf86748817347c9ff2b2436d5fdfc622b2edc31d732bd152d6301c160258f819` |
+| PT_02 BEFORE | boxes and points | `213ac0797a681e5895b5f40252ff65a813e099c68545c2b99b02a745ea2c9c39` |
+| PT_02 BEFORE | overlay | `f4a1f1457f770e44429210d067966709972dbbf16bad6a8105066226f623a3b4` |
+| PT_02 AFTER | boxes and points | `46ccd0cdc057d1182b25ca66e8ab89c5b093640a46f8887618683dd31668e8a5` |
+| PT_02 AFTER | overlay | `01b9ff994b23c489b56f8908b6cb551e3c12dd055ddd1584394382a0918ab237` |
+
+Useful M04 JSON predictions and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01, M02, and M03 are complete for Week 4.
+M01, M02, M03, and M04 are complete for Week 4.
 
 Next task:
 
-1. Begin Week 4 M04 SAM2 Automatic using the identical frozen SAM2 configuration used for Week 3.
-2. Do not reinterpret automatic mask quantity as tree count.
-3. Preserve all raw JSON predictions and visualization artifacts.
-4. Do not perform tree-specific filtering or truth-informed tuning.
-5. After M04 is frozen and mirrored, complete Week 4 M05 using the already-frozen M02 DeepForest boxes.
+1. Complete Week 4 M05 DeepForest GSD-Corrected -> SAM2.
+2. Reuse the already-frozen Week 4 M02 DeepForest boxes.
+3. Expected prompt counts are PT_R1 BEFORE 350, PT_R1 AFTER 365, PT_02 BEFORE 450, and PT_02 AFTER 478.
+4. Do not rerun DeepForest.
+5. Add Week 4 provenance checks to the existing M05 script before inference.
+6. Do not use field truth or post-hoc filtering.
