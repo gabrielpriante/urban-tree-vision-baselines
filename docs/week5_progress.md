@@ -188,13 +188,69 @@ Useful M02 derived imagery, prediction tables, and visualization artifacts were 
 
 Useful M03 derived inputs, raw predictions, and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M04 SAM2 Automatic
+
+- Status: complete.
+- Model: SAM 2.1 Hiera Base+.
+- Configuration: `configs/sam2.1/sam2.1_hiera_b+.yaml`.
+- Checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`.
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- Python: 3.11.16.
+- PyTorch: 2.11.0+cu128.
+- CUDA runtime: 12.8.
+- GPU: NVIDIA GeForce RTX 5070 Laptop GPU.
+- Input: untouched native standardized 8192 x 6144 RGB JPEG.
+- Points per side: 32.
+- Points per batch: 4.
+- Predicted-IoU threshold: 0.8.
+- Stability-score threshold: 0.95.
+- Automatic-mask quantities are segmentation quantities, not tree counts.
+- No tree-specific filtering was applied.
+- No field truth or post-hoc tuning was used.
+
+### Automatic Mask Quantities
+
+| Image | Masks |
+| --- | ---: |
+| PT_R1 BEFORE | 76 |
+| PT_R1 AFTER | 78 |
+| PT_02 BEFORE | 80 |
+| PT_02 AFTER | 78 |
+
+### Raw Prediction JSON Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `7b1ae24c0c5148904eb5a54dd09d1daa965f5143e1482864afcb6a55e4ac2311` |
+| PT_R1 AFTER | `3fd3fbe125217ab01d319217fea64beaaeb567b7ba721828ac42cba17a50bb5d` |
+| PT_02 BEFORE | `1d233f4baddb0137f83a73977813a008920fefa5cb19d0a073dc13ec35d79161` |
+| PT_02 AFTER | `8d96fc823199a2ffee11b16590f68dfc77e95e82df74d0d8a0ac7fadff6c25f0` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | boxes and points | `8698d101f751cd317f9615fdb14955e58b90507ec43d0084e841c0a517544c20` |
+| PT_R1 BEFORE | overlay | `fb829c8288831d1c91313fd0e6cea91496b0496eddf02a123ad923cf1b3c77ee` |
+| PT_R1 AFTER | boxes and points | `27b6cad6d5b02955f53bcaab95e29bdcc549d7947765f92bf91fac72a164d69f` |
+| PT_R1 AFTER | overlay | `8923fc90f60f79add0d6ca24cd9eb2fa4c6803f16aa209b408ce048ec8dc14df` |
+| PT_02 BEFORE | boxes and points | `4e99c4eb8ec7cd828119792a17f53c334bccec4ee5b0f30ac0b755d74314a803` |
+| PT_02 BEFORE | overlay | `3c0e3b5ebd079a73195ce599b5c40c23dcaec7fb0de4d218d65df7a134f46683` |
+| PT_02 AFTER | boxes and points | `59c483691dd8f30865e193cf67d8490e5fa08b597da9c1c4ecd57c532f09db0b` |
+| PT_02 AFTER | overlay | `bda24c6edf51db7c527517e9ecbd62e6623c8fc5f8bd029c0176e018025b07c7` |
+
+Useful M04 raw predictions and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01, M02, and M03 are complete for Week 5.
+M01, M02, M03, and M04 are complete for Week 5.
 
 Next task:
 
-1. Complete Week 5 M04 SAM2 Automatic.
-2. Preserve the frozen SAM2.1 Hiera Base+ checkpoint and automatic-mask settings.
-3. Treat automatic-mask quantity as segmentation quantity, not tree count.
-4. Do not tune using field truth.
+1. Complete Week 5 M05 DeepForest GSD-Corrected to SAM2.
+2. Use the frozen Week 5 M02 DeepForest predictions as box prompts.
+3. Generate one SAM2 mask per frozen DeepForest box.
+4. M05 inherits the M02 detection count and is not an independent tree-count model.
+5. Do not manually modify boxes, masks, or prompts.
+6. Do not tune using field truth.
