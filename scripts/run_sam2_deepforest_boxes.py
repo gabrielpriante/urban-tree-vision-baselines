@@ -30,6 +30,10 @@ WEEK4_EXPECTED_COUNTS = {("before", "PT_R1"): 350, ("after", "PT_R1"): 365, ("be
 WEEK4_EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "5765eb41ab89c9427141ab27e0e6cfd4feb53e4798ea7af68bf4824a8c7be273", ("after", "PT_R1"): "4fc3d22c3cd837e22828edf13b7556f6fe0def37403b7e950354eab8b0702fdf", ("before", "PT_02"): "75358d8e3144029cee679b2996575d785cb1acb1aa5ab148b9ad5eaf62848429", ("after", "PT_02"): "0cebef67412b933da8c13e66aa75b7a020c957e7403306859f804cf927c12549"}  # Freeze the verified Week 4 native standardized JPEG identities.
 WEEK4_EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "d774206227add179b1a18f12a4ad5ddb7a1fbbc1b7d7d4db86bfeec7d0e821ee", ("after", "PT_R1"): "0ad4f6b3c4dad1e1280229c9d83936fb6be68338f2f445043be1602bc83fc277", ("before", "PT_02"): "f97bfe06c820d692dd0f2df5651c9f7fcad08b7997263c062cd4b0ba6005f9db", ("after", "PT_02"): "c7e98c8a49871aab7de61fda5ab17d9d4fa9b667c94b89f2b753f23921113c04"}  # Freeze the verified Week 4 7.89 cm DeepForest input-image identities.
 WEEK4_EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "b79514ce8b493472ce6715edd632bf8bf94bf59f533feb6dfae55641410b0400", ("after", "PT_R1"): "1f2d33ccd21088ea7cf48c7bc312a1ebc9f33649037ef43102e3cc69e2bd6096", ("before", "PT_02"): "65ff4c615f16ec62832197d4bddfcacadb558f9060c36856d03f8844f26ea897", ("after", "PT_02"): "ba4144199e0d46f4079c64a0ed1930f825d1d4cc768cd1dc09d46b86e5ff0c8a"}  # Freeze the verified Week 4 M02 prediction-table identities used as M05 prompts.
+WEEK5_EXPECTED_COUNTS = {("before", "PT_R1"): 447, ("after", "PT_R1"): 376, ("before", "PT_02"): 503, ("after", "PT_02"): 452}  # Freeze the verified Week 5 DeepForest M02 box-prompt counts.
+WEEK5_EXPECTED_NATIVE_SHA256 = {("before", "PT_R1"): "470aea6de65e91ea87b69a444c649f80566bc6cd4d8ca72c52c224bbdab827ec", ("after", "PT_R1"): "ad6160e8599e79ab9cda58b7798c91e95399ba4f6f0a4a1585dd54c80016fd45", ("before", "PT_02"): "d5ca1a50522c5c94a1444370c6ab0f3f7c2f5868680a8c334fc0a2dec3c7a16e", ("after", "PT_02"): "73beab517719ab3f88fd80b326ff077adf32aad7c5bdaae4ac208a0c7060e218"}  # Freeze the verified Week 5 native standardized JPEG identities.
+WEEK5_EXPECTED_DEEPFOREST_IMAGE_SHA256 = {("before", "PT_R1"): "e1d43d5466c9439ba5ad35b98915ced077254b96194fdbec8151369863a687e3", ("after", "PT_R1"): "0dd5273afb164dd11db04ff0fdff5699f883efb0c1d2bbc9bae63db193908d65", ("before", "PT_02"): "1ce7e179c7ba5089b3342ea6a30895f5cb0692331db1cb0ec6a35f875164131f", ("after", "PT_02"): "2052eb89f43de725c66f2dfd7d5f5161707ff28db125862716279a1e948bbc31"}  # Freeze the verified Week 5 7.89 cm DeepForest input-image identities.
+WEEK5_EXPECTED_DEEPFOREST_CSV_SHA256 = {("before", "PT_R1"): "4356c06a649f3200165f8e0d615f79dabad847de21887ef436e7e5e00a446821", ("after", "PT_R1"): "a10d2390b6a70443af66fdadad500c4fb452c567c63b509866c9bd0c7bec8ec3", ("before", "PT_02"): "c6537358e312076fc04bc1a5bb844b0eb26b627277705d40d31c310675764fea", ("after", "PT_02"): "bc201e4316dcec0c016151f41b294bba733936efdf38d0ff2e990bbe75967a4e"}  # Freeze the verified Week 5 M02 prediction-table identities used as M05 prompts.
 def sha256_file(path):  # Define a small helper that calculates the SHA-256 identity of one input artifact.
     digest = hashlib.sha256()  # Create a fresh SHA-256 calculator for this file.
     with path.open("rb") as input_file:  # Open the file in binary mode without modifying it.
@@ -42,7 +46,7 @@ parser.add_argument("image_stem", choices=["PT_R1", "PT_02"])  # Require the cal
 parser.add_argument("run_label", nargs="?", default=None)  # Accept an optional repeated-collection label such as week3 while preserving original Week 1 behavior when omitted.
 args = parser.parse_args()  # Parse the requested B2 image before loading any research artifact.
 key = (args.condition, args.image_stem)  # Create the condition-image key used by the frozen provenance dictionaries.
-if args.run_label not in (None, "week3", "week4"):  # Restrict M05 to collection periods whose provenance has been explicitly frozen in this script.
+if args.run_label not in (None, "week3", "week4", "week5"):  # Restrict M05 to collection periods whose provenance has been explicitly frozen.
     raise SystemExit(f"Unsupported run label: {args.run_label}")  # Stop rather than silently using provenance from the wrong collection period.
 if args.run_label == "week3":  # Select the already-frozen Week 3 provenance when Week 3 is explicitly requested.
     expected_counts = WEEK3_EXPECTED_COUNTS  # Use the frozen Week 3 DeepForest prompt counts.
@@ -54,6 +58,11 @@ elif args.run_label == "week4":  # Select the newly frozen Week 4 provenance whe
     expected_native_sha256 = WEEK4_EXPECTED_NATIVE_SHA256  # Use the frozen Week 4 native-image identities.
     expected_deepforest_image_sha256 = WEEK4_EXPECTED_DEEPFOREST_IMAGE_SHA256  # Use the frozen Week 4 corrected-GSD image identities.
     expected_deepforest_csv_sha256 = WEEK4_EXPECTED_DEEPFOREST_CSV_SHA256  # Use the frozen Week 4 M02 prediction-table identities.
+elif args.run_label == "week5":  # Select the frozen Week 5 provenance when Week 5 is explicitly requested.
+    expected_counts = WEEK5_EXPECTED_COUNTS  # Use the frozen Week 5 DeepForest prompt counts.
+    expected_native_sha256 = WEEK5_EXPECTED_NATIVE_SHA256  # Use the frozen Week 5 native-image identities.
+    expected_deepforest_image_sha256 = WEEK5_EXPECTED_DEEPFOREST_IMAGE_SHA256  # Use the frozen Week 5 corrected-GSD image identities.
+    expected_deepforest_csv_sha256 = WEEK5_EXPECTED_DEEPFOREST_CSV_SHA256  # Use the frozen Week 5 M02 prediction-table identities.
 else:  # Preserve the original unlabeled Week 1 benchmark behavior.
     expected_counts = EXPECTED_COUNTS  # Use the original Week 1 DeepForest prompt counts.
     expected_native_sha256 = EXPECTED_NATIVE_SHA256  # Use the original Week 1 native-image identities.

@@ -242,15 +242,66 @@ Useful M03 derived inputs, raw predictions, and visualization artifacts were mir
 
 Useful M04 raw predictions and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M05 DeepForest GSD-Corrected to SAM2
+
+- Status: complete.
+- Detector source: frozen Week 5 M02 DeepForest GSD-Corrected predictions.
+- DeepForest coordinate-space dimensions: 1734 x 1300 pixels.
+- Native SAM2 image dimensions: 8192 x 6144 pixels.
+- Coordinate scale X: 4.724336793541.
+- Coordinate scale Y: 4.726153846154.
+- SAM2 model: SAM 2.1 Hiera Base+.
+- Configuration: `configs/sam2.1/sam2.1_hiera_b+.yaml`.
+- Checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`.
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- One SAM2 mask was generated for every frozen DeepForest box.
+- No DeepForest boxes were manually edited.
+- M05 inherits the M02 detection quantity and is not an independent tree-count model.
+- No field truth or post-hoc prompt tuning was used.
+
+### One-to-One Box-to-Mask Quantities
+
+| Image | DeepForest Boxes | SAM2 Masks |
+| --- | ---: | ---: |
+| PT_R1 BEFORE | 447 | 447 |
+| PT_R1 AFTER | 376 | 376 |
+| PT_02 BEFORE | 503 | 503 |
+| PT_02 AFTER | 452 | 452 |
+
+### Raw Prediction JSON Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `61bf8a85d7eaf16f6aed6ce5c5f90853a9b6fb310e0d1a621069c6a40e246a2c` |
+| PT_R1 AFTER | `4af43c475613a334355f35c55796c8d2b7b542f5af631b082ede5538d45dad08` |
+| PT_02 BEFORE | `bd6634bc43d2288e4406a10a41b87c21cf4585ee0dd91675c6d6bff4a70a14fa` |
+| PT_02 AFTER | `edff5065a38242e3373f2026846860f1b4a4f3694e8a123e79367337205d6177` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | DeepForest boxes | `c8b18723f864b9fd3cfc5ea9e944bafbbef54da46ede80c5c31a10f1f0467af2` |
+| PT_R1 BEFORE | SAM2 overlay | `185f539827f0af1b6867582111149c9b81ecb5f5aaa05e7fb8e462f3197afbb4` |
+| PT_R1 AFTER | DeepForest boxes | `02e378e9acdacd155c3b55ac3ded1d22f4941a8689ee3d1becc564fa4786df9b` |
+| PT_R1 AFTER | SAM2 overlay | `2a39a3e426e97c859165b3c3cedcc2febba7d8ee5723df77a2829eff553d8488` |
+| PT_02 BEFORE | DeepForest boxes | `72f6f6dc878a4194205424fcba4326b694a8de96b5295650b98d03022dd1d01e` |
+| PT_02 BEFORE | SAM2 overlay | `2f0a4a8a8f169512d0b3d4e12f010d2e1e5d35630eda1f7b0042cd0502b1978e` |
+| PT_02 AFTER | DeepForest boxes | `15f7c5366b785d25255917b951b3a52513caedd5ebdc94dd781a5066c748409e` |
+| PT_02 AFTER | SAM2 overlay | `81c8302434c1663d8e1d9378828fb7b41be783f0cae0b2d3382f14f6a288499d` |
+
+Useful M05 raw predictions and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01, M02, M03, and M04 are complete for Week 5.
+Week 5 is complete through the frozen M01-M05 benchmark pipeline.
 
-Next task:
-
-1. Complete Week 5 M05 DeepForest GSD-Corrected to SAM2.
-2. Use the frozen Week 5 M02 DeepForest predictions as box prompts.
-3. Generate one SAM2 mask per frozen DeepForest box.
-4. M05 inherits the M02 detection count and is not an independent tree-count model.
-5. Do not manually modify boxes, masks, or prompts.
-6. Do not tune using field truth.
+1. M01 DeepForest Native: complete.
+2. M02 DeepForest GSD-Corrected: complete.
+3. M03 TreeCountSegHeight: complete.
+4. M04 SAM2 Automatic: complete.
+5. M05 DeepForest GSD-Corrected to SAM2: complete.
+6. M06 TreePseCo remains skipped because execution and checkpoint access remain unresolved.
+7. Next benchmark expansion is M07 SAM3-family instance segmentation.
+8. Do not alter completed M01-M05 parameters based on observed Week 5 outputs or field truth.
