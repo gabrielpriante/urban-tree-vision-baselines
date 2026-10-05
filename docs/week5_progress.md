@@ -119,14 +119,82 @@ Useful M01 prediction tables and visualization artifacts were mirrored to the Wi
 
 Useful M02 derived imagery, prediction tables, and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M03 TreeCountSegHeight
+
+- Status: complete.
+- Native GSD assumption: 1.67 cm/pixel.
+- Target GSD: 20.00 cm/pixel.
+- Resize factor: 0.083500.
+- Derived dimensions: 684 x 513 pixels.
+- Derived format: three-band RGB TIFF.
+- Resampling: Lanczos.
+- Docker image: `sizhuoli/tree_expert@sha256:fab4a8e16d7bc085440724c9fa522c957dc04299c625fcab7617b87c1c154e13`.
+- Model checkpoint: `trees_20210620-0202_Adam_e4_redgreenblue_256_84_frames_weightmapTversky_MSE100_5weight_attUNet.h5`.
+- Checkpoint SHA-256: `abce53345b8159aeda49dce7db32a0806ee90970593e7d2a1fe88d1f133ac843`.
+- Segmentation threshold: 0.5.
+- Count interpretation: continuous sum of the predicted density raster.
+- Counts remain fractional and are not rounded.
+- These values are density-estimated counts, not independently localized tree instances.
+- All four Docker runs completed with `Predicted 1 images.` and `Failed to predict 0 images.`.
+- No field truth or post-hoc tuning was used.
+
+### Derived Input Hashes
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `5016d9409ea864e44b38f162d82d12ebb923cc1859b8a816602253bda1f16b2d` |
+| PT_R1 AFTER | `6a4d0313fb20d38be6436ed54f8638967937a6df8d43bb124653932aa654f378` |
+| PT_02 BEFORE | `f25f39582ae9433c4244a39cc76f2207073074d84ce5ff5fecd2feab3bd3cfd5` |
+| PT_02 AFTER | `45e7d841ace0b528b39168829e94dba6bdee7e7817484b3730112fc94aa89a90` |
+
+### Continuous Predicted Counts
+
+| Image | Density-Sum Count |
+| --- | ---: |
+| PT_R1 BEFORE | `12.3053006977` |
+| PT_R1 AFTER | `11.2363078445` |
+| PT_02 BEFORE | `17.5792767350` |
+| PT_02 AFTER | `15.2420119513` |
+
+### Raw Prediction TIFF Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `bc76c7b51d3ec4ac99a36f189c5c99cbc2591698c9543df17c10aaae5e5a5072` |
+| PT_R1 BEFORE | segmentation | `16e934bb838427a4ddc30d26d5f3083d77ffb8fd5e22f7d6c37f4f13a719b448` |
+| PT_R1 AFTER | density | `5000a8405222f04cac73c79bdf1bf12c0529cf4351019de08ba0b3a92a28a582` |
+| PT_R1 AFTER | segmentation | `cf58fa407eef6f9605be77b5b6fe3aa201c6ed169e11c94ef5491a24ea87add1` |
+| PT_02 BEFORE | density | `936dfb47dcd37ecdb7e529c6889cbf5fe07671aecc4da448d9376ed68076b4e1` |
+| PT_02 BEFORE | segmentation | `a4912b2210d31e9094bb8ee836338e265ba26fef6a0c4a1a080f00da95047cbb` |
+| PT_02 AFTER | density | `59152825148fc240405fa05772d8a78b2374fa68a059d1353b6b169da7e87f38` |
+| PT_02 AFTER | segmentation | `86cede050c954e71056a27b5a9ce890a7d5fe7df3473f3133b2a0e72d93d9f49` |
+
+### Visualization PNG Hashes
+
+| Image | Artifact | SHA-256 |
+| --- | --- | --- |
+| PT_R1 BEFORE | density | `566380aeceb9ae42731ae98c4312ebb02dde44c4f6ecd6ab612539ebc3de78ae` |
+| PT_R1 BEFORE | overlay | `5798289597ba18ca8e7c91c3f1b69cf24208f9bf230e55d791fb76688194ad63` |
+| PT_R1 BEFORE | segmentation | `6857ebeb2531d684f38772fbad1ad6ec17155c01e02ad04806ca9cfec0a99e40` |
+| PT_R1 AFTER | density | `500dbbb3ce8365ee3bf145b3bd409f8c51d85cdf645bf699b1d610c7625e8126` |
+| PT_R1 AFTER | overlay | `c7673ad4d74998ecb7dbbff37aba6aba06342b1db6214c56e42178bb9042932a` |
+| PT_R1 AFTER | segmentation | `81865dcec24601965947ad3f9623d6abc59f54753a27f0dd9b32d26a76274bf7` |
+| PT_02 BEFORE | density | `fa08630b77630ef3a36ef57e15fb0284eb4f61fbe34ac48521360e41b98f6736` |
+| PT_02 BEFORE | overlay | `100d4858624042fe6872204032591cff090e081c8507ceddfcdc902d25f8ac87` |
+| PT_02 BEFORE | segmentation | `b05476f2bcd5bdc479fbe37baf13449744ccfbf71e9cf13841186657d5268fa7` |
+| PT_02 AFTER | density | `df824a049b3a07032dc8f665cd78b12d614c435fd9bcf09b312eeb824d928e25` |
+| PT_02 AFTER | overlay | `c527460005f8c633b0251bc7a3a4d0e2c1095526dbd0ab5246022c5cd39601e0` |
+| PT_02 AFTER | segmentation | `c6bc893097fcc521c1337524493b996d42197511d1646bb017d54bc28d390996` |
+
+Useful M03 derived inputs, raw predictions, and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-M01 and M02 are complete for Week 5.
+M01, M02, and M03 are complete for Week 5.
 
 Next task:
 
-1. Complete Week 5 M03 TreeCountSegHeight.
-2. Resample the four native benchmark images to the frozen 20.00 cm/pixel TreeCountSegHeight input resolution.
-3. Preserve the existing model checkpoint and Docker protocol.
-4. Preserve continuous density-sum counts as fractional values.
-5. Do not tune using field truth.
+1. Complete Week 5 M04 SAM2 Automatic.
+2. Preserve the frozen SAM2.1 Hiera Base+ checkpoint and automatic-mask settings.
+3. Treat automatic-mask quantity as segmentation quantity, not tree count.
+4. Do not tune using field truth.
