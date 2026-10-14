@@ -68,13 +68,66 @@
 
 Useful Week 6 M01 prediction tables and visualization artifacts were mirrored to the Windows repository after generation.
 
+## M02 DeepForest GSD-Corrected
+
+- Status: complete.
+- Native assumed GSD: 1.67 cm/pixel.
+- Target GSD: 7.89 cm/pixel.
+- Resize factor: 0.211660.
+- Resampling method: Lanczos.
+- Derived image dimensions: 1734 x 1300 pixels.
+- Derived image color mode: RGB.
+- DeepForest inference settings remained frozen from M01.
+- No field truth or post-hoc tuning was used.
+- Detection quantities are independent DeepForest object detections.
+- These detections will later provide the frozen box prompts for M05.
+
+### Derived Input SHA-256
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `c94bf04a63eacc971c6d56bb24c06f0aa484ed18e7facfa1d9d9d49f228aad28` |
+| PT_R1 AFTER | `5c8a3fc50bbe6158c82d26c947b1c18e14e72125187bc9f0bda2976b0cce1019` |
+| PT_02 BEFORE | `bd0adee95d7b166787ece5d143c222cf17a8ff5fd538d3efcd3ffbc496b8b4d5` |
+| PT_02 AFTER | `9369591579c96f210a864b6ac439bbdea74047324354378a5608e268635e00ae` |
+
+### Detection Quantities
+
+| Image | Detections |
+| --- | ---: |
+| PT_R1 BEFORE | 291 |
+| PT_R1 AFTER | 274 |
+| PT_02 BEFORE | 349 |
+| PT_02 AFTER | 352 |
+
+### Prediction CSV SHA-256
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `147f2803b5e428ad203811a982ca470659af40432d64e7ef510b9c402e34d7e6` |
+| PT_R1 AFTER | `82ca01a6540e6350ffb2ae03ac39eb9ca989c6add122935ed2c87f0ebbeddf9e` |
+| PT_02 BEFORE | `50a8de0c78d775f777b469ec6176462ec334be31b3a6833a3e507f6219213822` |
+| PT_02 AFTER | `1c532dbacaefcb06dd869b8e5bd633e975835c752a2e8a309ed12e220156bf7c` |
+
+### Prediction Visualization SHA-256
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `11f251cab9e95f74ae3df2649573e629ee0a539ce059eb6278e2b726a48a566b` |
+| PT_R1 AFTER | `5159dd1d0b8844fd2e98af9e0592be154609ade1404708a03f8fdb7133aed1df` |
+| PT_02 BEFORE | `8643d1c0c37a9538f9998aa82653fd4a567d3c0ec88d02adedb045d35a04c020` |
+| PT_02 AFTER | `b8d04f0fe9aae4863028bdb860996f54e15ed7b54a12e9db332f9456a1d3cf9e` |
+
+The generic DeepForest runner initially wrote the Week 6 M02 artifacts into the Week 6 `single_image` namespace. Those exact M02 artifacts were preserved under the dedicated `gsd_7.89` namespace, and the previously mirrored M01 artifacts were restored to `single_image`. No inference was rerun or altered during this bookkeeping correction.
+
+Useful Week 6 M02 derived inputs, prediction tables, and visualization artifacts were mirrored to the Windows repository after generation.
+
 ## Exact Resume Point
 
-Week 6 M01 is complete.
+Week 6 is complete through M02.
 
-Next task:
-
-1. Complete Week 6 M02 DeepForest GSD-Corrected.
-2. Preserve the frozen 7.89 cm/pixel preprocessing protocol.
-3. Preserve the frozen DeepForest inference settings used in previous weeks.
-4. Do not tune parameters using Week 6 outputs or field truth.
+1. M01 DeepForest Native: complete.
+2. M02 DeepForest GSD-Corrected: complete.
+3. Next task: M03 TreeCountSegHeight.
+4. Preserve the frozen 20 cm/pixel preprocessing and Dockerized M03 protocol.
+5. Do not tune parameters using Week 6 outputs or field truth.
