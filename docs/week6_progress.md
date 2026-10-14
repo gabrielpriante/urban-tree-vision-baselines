@@ -243,15 +243,69 @@ Week 6 M03 derived inputs, raw model outputs, and visualization artifacts were m
 
 Week 6 M04 raw mask outputs and visualization artifacts were mirrored to the Windows repository.
 
+## M05 DeepForest GSD-Corrected to SAM2
+
+- Status: complete.
+- M05 uses the frozen M02 DeepForest detections as SAM2 box prompts.
+- DeepForest coordinate space: 1734 x 1300 pixels.
+- Native SAM2 image space: 8192 x 6144 pixels.
+- Coordinate scale X: 4.724336793541.
+- Coordinate scale Y: 4.726153846154.
+- SAM2 checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- One SAM2 mask was generated for each frozen DeepForest M02 box.
+- No manual box editing was performed.
+- No field truth was used for prompt selection.
+- M05 does not provide an independent tree count; it inherits the M02 detection quantity.
+
+### DeepForest Boxes to SAM2 Masks
+
+| Image | DeepForest Boxes | SAM2 Masks |
+| --- | ---: | ---: |
+| PT_R1 BEFORE | 291 | 291 |
+| PT_R1 AFTER | 274 | 274 |
+| PT_02 BEFORE | 349 | 349 |
+| PT_02 AFTER | 352 | 352 |
+
+### Raw Mask JSON SHA-256
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `bd2bfab3fc6b4c660bd10b5597d5fcf7e07e3c3fb6101597a15bbfd849ebbf1e` |
+| PT_R1 AFTER | `3f7979793758a546d808910e91275a99ed20a92d98bf227ccf6908dfc1c163f7` |
+| PT_02 BEFORE | `695e0a84f6b51e37b84423a9c6a4e2654e614bbbfcd4a6de1fa4b1dff590c21a` |
+| PT_02 AFTER | `0563f113d5b06d1d3e20463fa840a7d2e3d4421f50848b7418a3c34b031b56cc` |
+
+### Visualization SHA-256
+
+| Image | SAM2 Overlay | DeepForest Boxes |
+| --- | --- | --- |
+| PT_R1 BEFORE | `45e18765e8a53c2712855352144366ca850c0dd9e184357662c5b9dc3a9561c7` | `6775ac24cf98048a1dd7e62a5fc7b7699eef397edb6d455bbe7ec36fd0844d64` |
+| PT_R1 AFTER | `18a22f5c49b4f09fce883e0c73baf61164cacc2edfb924cf67b2475ff4c4d4ab` | `561cb33df5c6d7ecebfed47a95bd1d7584463f23acbcd52571654c1c22d72a05` |
+| PT_02 BEFORE | `01d3077195a3c7765e997c26c3af2ed9a3107aed9921560a1074e801df4ed3fa` | `4979590142670441c24bb7fa35ca164e2c1b70ffe6935e7e5d563cf7c600ff00` |
+| PT_02 AFTER | `bd2730845f2b5197f8aeecceb514d2dda524b89c2f01597813322fe6c82dc5d2` | `c06c8e592794d281a917980a1353509857522c720817c6f3547bb162d5cc19e6` |
+
+Week 6 M05 raw outputs and visualization artifacts were mirrored to the Windows repository.
+
+## Model Roster Status
+
+- M01 DeepForest Native: complete.
+- M02 DeepForest GSD-Corrected: complete.
+- M03 TreeCountSegHeight: complete.
+- M04 SAM2 Automatic: complete.
+- M05 DeepForest GSD-Corrected to SAM2: complete.
+- M06 TreePseCo: retained in roster; skipped/deferred because reproducible checkpoint/access remains unresolved.
+- M07 SAM3-family: retained in roster; deferred/skipped for the current benchmark pass.
+- M08 Claude: next.
+- M09 ChatGPT: planned.
+- M10 Gemini: planned.
+- M11 Microsoft Copilot: planned.
+
 ## Exact Resume Point
 
-Week 6 is complete through M04.
+Week 6 conventional-model execution is complete through M05.
 
-1. M01 DeepForest Native: complete.
-2. M02 DeepForest GSD-Corrected: complete.
-3. M03 TreeCountSegHeight: complete.
-4. M04 SAM2 Automatic: complete.
-5. Next task: M05 DeepForest GSD-Corrected to SAM2.
-6. Docker is not required for M05.
-7. M05 must inherit the frozen M02 DeepForest boxes and must not be interpreted as an independent tree count.
-8. Do not tune using Week 6 outputs or field truth.
+1. Commit the M05 provenance extension and Week 6 M05 documentation together as the single M05 commit.
+2. M06 and M07 remain in the model roster but are skipped/deferred for the current pass.
+3. Next experimental phase: freeze the multimodal LLM protocol before running M08 Claude.
+4. Do not tune prompts using model outputs or field truth after LLM execution begins.
