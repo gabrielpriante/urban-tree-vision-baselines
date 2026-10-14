@@ -184,13 +184,74 @@ Useful Week 6 M02 derived inputs, prediction tables, and visualization artifacts
 
 Week 6 M03 derived inputs, raw model outputs, and visualization artifacts were mirrored to the Windows repository.
 
+## M04 SAM2 Automatic
+
+- Status: complete.
+- Input imagery: untouched native Week 6 RGB imagery at 8192 x 6144 pixels.
+- Python: 3.11.16.
+- PyTorch: 2.11.0+cu128.
+- CUDA runtime: 12.8.
+- GPU: NVIDIA GeForce RTX 5070 Laptop GPU.
+- SAM2 checkpoint: `models/sam2/checkpoints/sam2.1_hiera_base_plus.pt`.
+- Checkpoint SHA-256: `a2345aede8715ab1d5d31b4a509fb160c5a4af1970f199d9054ccfb746c004c5`.
+- SAM2 source commit: `2b90b9f5ceec907a1c18123530e92e794ad901a4`.
+- Config: `configs/sam2.1/sam2.1_hiera_b+.yaml`.
+- points_per_side: 32.
+- points_per_batch: 4.
+- pred_iou_thresh: 0.8.
+- stability_score_thresh: 0.95.
+- stability_score_offset: 1.0.
+- mask_threshold: 0.0.
+- box_nms_thresh: 0.7.
+- crop_n_layers: 0.
+- crop_nms_thresh: 0.7.
+- crop_overlap_ratio: 512 / 1500.
+- crop_n_points_downscale_factor: 1.
+- min_mask_region_area: 0.
+- output_mode: uncompressed_rle.
+- use_m2m: false.
+- multimask_output: true.
+- No field truth or post-hoc tuning was used.
+- M04 quantity is the number of automatic SAM2 masks and is not interpreted as tree count.
+
+### Automatic Mask Quantities
+
+| Image | Automatic Masks |
+| --- | ---: |
+| PT_R1 BEFORE | 99 |
+| PT_R1 AFTER | 84 |
+| PT_02 BEFORE | 84 |
+| PT_02 AFTER | 98 |
+
+### Raw Mask JSON SHA-256
+
+| Image | SHA-256 |
+| --- | --- |
+| PT_R1 BEFORE | `4d3abceee96be91204defc4a90176657da67712dfb1cc5c554c69d0cf13943f7` |
+| PT_R1 AFTER | `0166feb5a76b46326f426e4f4cc59ebbae380212fad6e00784cd67465542fc4f` |
+| PT_02 BEFORE | `c730a241e8710ddbe69d3f559463d1157d082e0472ba5df6ecc7b122cb9f4820` |
+| PT_02 AFTER | `18cf1b4ce5d4575009773bc6d88ac881b3a45f9fef442959ad877feecf819917` |
+
+### Visualization SHA-256
+
+| Image | Overlay | Boxes and Points |
+| --- | --- | --- |
+| PT_R1 BEFORE | `910addf327bdc9e152dcc21773250c02fb30eda6dfda1bfa6d2bed1ee77a5676` | `9dd096f46ee836591b4f99c63eead94ec87cdc6018bd9f0b7ea8703ddf13c02a` |
+| PT_R1 AFTER | `c4e516b9e30d729751ee64aebe9d1a7455fa468baa8b5b2f55ec185f9ec1274e` | `44d0634d1259653cff73a53a6a289501b091633fa7787d38dd5a64bf4576efa6` |
+| PT_02 BEFORE | `65c884205b334c4a848a9a2574b4869e07113016b6e6d1dcddee0a0b5696680e` | `6cc7134cc2628c8987b3b6f3f9a375558da152294cc09b4326d7c84f30ec9ed7` |
+| PT_02 AFTER | `2a9352f429a6916e22a4730692d332e3215daca7089eea3ab21e8b1baa849464` | `55ecc4220a1d5b78013f2149c6342511643af333ed90e99fd9d8f9e45bbf2bd4` |
+
+Week 6 M04 raw mask outputs and visualization artifacts were mirrored to the Windows repository.
+
 ## Exact Resume Point
 
-Week 6 is complete through M03.
+Week 6 is complete through M04.
 
 1. M01 DeepForest Native: complete.
 2. M02 DeepForest GSD-Corrected: complete.
 3. M03 TreeCountSegHeight: complete.
-4. Next task: M04 SAM2 Automatic.
-5. Docker is not required for M04.
-6. Preserve the frozen SAM2 automatic-mask protocol and do not tune using Week 6 outputs or field truth.
+4. M04 SAM2 Automatic: complete.
+5. Next task: M05 DeepForest GSD-Corrected to SAM2.
+6. Docker is not required for M05.
+7. M05 must inherit the frozen M02 DeepForest boxes and must not be interpreted as an independent tree count.
+8. Do not tune using Week 6 outputs or field truth.
